@@ -29,16 +29,17 @@ jobs:
       - name: Build Shared Library
         shell: bash
         run: |
-          # TODO: Change 'bmiheatf.f90' to your actual module's filename
-          SOURCE_FILE="bmi_heat/bmi_heat.f90"
-          
-          # We name the output 'libbmi_model' (you can change this too)
+          # Download ONLY the bmi.f90 file from the master branch
+          curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90
+          INCLUDE_DIR="-Iheat"
+          SOURCE_FILE="bmi.f90 bmi_heat/bmi_heat.f90"
+          MODEL_FILE="heat/heat.f90"
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Building DLL for Windows..."
-            $FC /LD -o libbmi_heat.dll $SOURCE_FILE
+            $FC /LD $INCLUDE_DIR -o libbmi_heat.dll $MODEL_FILE $SOURCE_FILE
           else
             echo "Building Shared Object for Linux..."
-            $FC -shared -fPIC -o libbmi_heat.so $SOURCE_FILE
+            $FC -shared -fPIC $INCLUDE_DIR -o libbmi_heat.so $MODEL_FILE $SOURCE_FILE
           fi
 
       - name: Upload Compiled Libraries

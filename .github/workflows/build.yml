@@ -24,21 +24,44 @@ jobs:
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: intel
-          version: 'latest'
+          version: '2024.1'
 
       - name: Build Shared Library
         shell: bash
         run: |
-          # TODO: Change 'bmiheatf.f90' to your actual module's filename
-          SOURCE_FILE="bmi_heat/bmi_heat.f90"
-          
-          # We name the output 'libbmi_model' (you can change this too)
+          # Download ONLY the bmi.f90 file from the master branch
+          curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90
+          INCLUDE_DIR="-Iheat"
+          SOURCE_FILE="bmi.f90 bmi_heat/bmi_heat.f90"
+          MODEL_FILE="heat/heat.f90"
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Building DLL for Windows..."
-            $FC /LD -o libbmi_heat.dll $SOURCE_FILE
+            $FC //LD $INCLUDE_DIR -o libbmi_heat.dll $MODEL_FILE $SOURCE_FILE
           else
             echo "Building Shared Object for Linux..."
-            $FC -shared -fPIC -o libbmi_heat.so $SOURCE_FILE
+            $FC -shared -fPIC $INCLUDE_DIR -o libbmi_heat.so $MODEL_FILE $SOURCE_FILE
+          fi
+
+      - name: Harvest Intel Runtime Libraries
+        shell: bash
+        run: |
+          echo "Creating a folder to hold the stolen libraries..."
+          mkdir -p intel_redist
+          
+          echo "Hunting inside $ONEAPI_ROOT..."
+          
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            # Find the specific Windows DLLs and copy them
+            find "$ONEAPI_ROOT" -name "libifcoremd.dll" -exec cp {} ./intel_redist/ \;
+            find "$ONEAPI_ROOT" -name "libmmd.dll" -exec cp {} ./intel_redist/ \;
+            find "$ONEAPI_ROOT" -name "svml_dispmd.dll" -exec cp {} ./intel_redist/ \;
+            find "$ONEAPI_ROOT" -name "libiomp5md.dll" -exec cp {} ./intel_redist/ \;
+          else
+            # Find the specific Linux SOs and copy them
+            find "$ONEAPI_ROOT" -name "libifcore.so.5" -exec cp {} ./intel_redist/ \;
+            find "$ONEAPI_ROOT" -name "libimf.so" -exec cp {} ./intel_redist/ \;
+            find "$ONEAPI_ROOT" -name "libsvml.so" -exec cp {} ./intel_redist/ \;
+            find "$ONEAPI_ROOT" -name "libintlc.so.5" -exec cp {} ./intel_redist/ \;
           fi
 
       - name: Upload Compiled Libraries
@@ -49,5 +72,6 @@ jobs:
             *.so
             *.dll
             *.lib
+            intel_redist/
           if-no-files-found: error
           

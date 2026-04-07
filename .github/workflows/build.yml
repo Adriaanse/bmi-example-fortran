@@ -36,7 +36,7 @@ jobs:
           MODEL_FILE="heat/heat.f90"
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Building DLL for Windows..."
-            $FC /LD $INCLUDE_DIR -o libbmi_heat.dll $MODEL_FILE $SOURCE_FILE
+            $FC -shared $INCLUDE_DIR -o libbmi_heat.dll $MODEL_FILE $SOURCE_FILE
           else
             echo "Building Shared Object for Linux..."
             $FC -shared -fPIC $INCLUDE_DIR -o libbmi_heat.so $MODEL_FILE $SOURCE_FILE

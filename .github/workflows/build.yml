@@ -24,7 +24,7 @@ jobs:
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: intel
-          version: 'latest'
+          version: '2025.2'
 
       - name: Build Shared Library
         shell: bash

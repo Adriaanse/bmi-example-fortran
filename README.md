@@ -7,6 +7,8 @@ An example of implementing the
 [Fortran bindings](https://github.com/csdms/bmi-fortran)
 for the CSDMS [Basic Model Interface](https://bmi.csdms.io) (BMI).
 
+Forked by Deltares to be built using ISO-C binding for both Linux and Windows
+
 ## Overview
 
 This is an example of implementing a BMI

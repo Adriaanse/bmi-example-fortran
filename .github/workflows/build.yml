@@ -1,0 +1,53 @@
+name: Build Intel Shared Library
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allows you to trigger the build manually
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Intel Fortran Compiler (ifx)
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: intel
+          version: 'latest'
+
+      - name: Build Shared Library
+        shell: bash
+        run: |
+          # TODO: Change 'bmiheatf.f90' to your actual module's filename
+          SOURCE_FILE="bmi_heat/bmi_heat.f90"
+          
+          # We name the output 'libbmi_model' (you can change this too)
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo "Building DLL for Windows..."
+            $FC /LD -o libbmi_heat.dll $SOURCE_FILE
+          else
+            echo "Building Shared Object for Linux..."
+            $FC -shared -fPIC -o libbmi_heat.so $SOURCE_FILE
+          fi
+
+      - name: Upload Compiled Libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-library-${{ matrix.os }}
+          path: |
+            *.so
+            *.dll
+            *.lib
+          if-no-files-found: error
+          

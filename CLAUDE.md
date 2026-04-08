@@ -97,29 +97,49 @@ Example (`example/test1.cfg`): `1.0  100.0  5  10`
 
 Each BMI function has its own test file in `test/`. All tests share a `fixtures.f90` helper and receive `test/sample.cfg` as a command-line argument. To add a new test with CMake, add a `make_test(<test_name>)` call in `test/CMakeLists.txt`.
 
-## ISO_C_BINDING Audit Required
+## Java Interop — C Wrapper Layer
 
-The existing ISO_C_BINDING usage in `bmi_heat.f90` is incomplete:
-- `c_loc` and `c_f_pointer` are used only as internal Fortran convenience
-- No `bind(C, name=...)` on any functions
-- No C-compatible types in function signatures
-- Fortran pointer return types are not C-compatible
+The shared library is called from Java via JNA (Java Native Access). The C wrapper is implemented in `bmi_heat/bmi_c_wrapper.f90` and compiled as part of the shared library.
 
-A full audit and C wrapper layer is needed before Java/JNA can call the library on either windows or linux.
+### Opaque handle pattern
 
-## Java Interop Goal
+Java holds a `long` (mapped from `type(c_ptr)`) pointing to a heap-allocated `bmi_heat` instance. Lifecycle:
 
-The shared library will be called from Java via JNA (Java Native Access). 
-This requires:
-- All exported functions to be C-callable with `bind(C, name="...")` 
-- DLLEXPORT directives (`!DIR$ ATTRIBUTES DLLEXPORT`) for Windows compatibility
-- An opaque handle pattern: Java holds a `long` representing a `c_ptr` to 
-  a heap-allocated `bmi_heat` instance
-- No Fortran pointer types in the C API (Fortran pointers are not C-compatible)
-- Proper C string handling (null-terminated `c_char` arrays)
+```java
+long handle = lib.bmi_create();
+lib.bmi_initialize(handle, "test1.cfg\0");
+// ... use the model ...
+lib.bmi_finalize(handle);
+lib.bmi_destroy(handle);
+```
+
+### String conventions
+
+- **In**: null-terminated `byte[]` (JNA maps `String` or `byte[]` to `char*`)
+- **Out (scalar)**: caller provides a `byte[BMI_MAX_VAR_NAME]` buffer; wrapper writes null-terminated content
+- **Out (var names)**: flat `byte[count * BMI_MAX_VAR_NAME]` buffer; names are packed at fixed `BMI_MAX_VAR_NAME`-byte strides, each null-terminated. Call `bmi_get_input_item_count` first to know `count`.
+
+### Array conventions
+
+All array functions carry an explicit `int n` element count. Java passes a primitive array (`float[]`, `int[]`, `double[]`); JNA maps these directly to `float*` etc.
+
+### Zero-copy pointer (`bmi_get_value_ptr`)
+
+Returns a raw `Pointer` to the model's internal temperature buffer (currently only `plate_surface__temperature`). Java can read/write this directly without copying. Returns `null` on failure or for unsupported variables.
+
+### Exported C symbols (all prefixed `bmi_`)
+
+`bmi_create`, `bmi_destroy`, `bmi_initialize`, `bmi_finalize`, `bmi_get_component_name`, `bmi_get_input_item_count`, `bmi_get_output_item_count`, `bmi_get_input_var_names`, `bmi_get_output_var_names`, `bmi_get_start_time`, `bmi_get_end_time`, `bmi_get_current_time`, `bmi_get_time_step`, `bmi_get_time_units`, `bmi_update`, `bmi_update_until`, `bmi_get_var_grid`, `bmi_get_var_type`, `bmi_get_var_units`, `bmi_get_var_itemsize`, `bmi_get_var_nbytes`, `bmi_get_var_location`, `bmi_get_grid_rank`, `bmi_get_grid_size`, `bmi_get_grid_type`, `bmi_get_grid_shape`, `bmi_get_grid_spacing`, `bmi_get_grid_origin`, `bmi_get_grid_x/y/z`, `bmi_get_grid_node/edge/face_count`, `bmi_get_grid_edge_nodes`, `bmi_get_grid_face_edges/nodes`, `bmi_get_grid_nodes_per_face`, `bmi_get_value_int/float/double`, `bmi_get_value_ptr`, `bmi_get_value_at_indices_int/float/double`, `bmi_set_value_int/float/double`, `bmi_set_value_at_indices_int/float/double`
+
+### Known limitations / future work
+
+- `bmi_get_value_ptr` only supports `real(c_float)` (the only variable with a working `get_value_ptr` implementation in `bmi_heat.f90`)
+- `get_value_at_indices` and `set_value_at_indices` for int and double types always return `BMI_FAILURE` (unimplemented stubs in `bmi_heat.f90`)
+- `!DEC$ ATTRIBUTES DLLEXPORT` is Intel Fortran (ifx) specific — replace with `!GCC$ ATTRIBUTES DLLEXPORT` for gfortran on Windows
+- `bmi_create` uses `c_loc` on a non-interoperable derived type (`bmi_heat` extends abstract `bmi`); this is an ifx extension, not strictly standard Fortran
 
 ## Constraints
 - Do NOT modify `bmi.f90` — this is the upstream CSDMS file fetched during CI
 - Do NOT modify `heat.f90` — this is the upstream CSDMS file fetched during CI
 - No local Fortran compiler available — all builds are validated via GitHub Actions CI
-- The C wrapper should be a new file, not modifications to existing source files
+- `bmi_heat/bmi.f90` in the repo is a corrupted HTML download (kept as reference); the CI always fetches the real file fresh from `raw.githubusercontent.com`

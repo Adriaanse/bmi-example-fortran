@@ -46,7 +46,7 @@ contains
     character(kind=c_char), intent(in) :: c_str(*)
     integer :: i
     strlen = 0
-    do i = 1, BMI_MAX_COMPONENT_NAME
+    do i = 1, BMI_MAX_VAR_NAME
       if (c_str(i) == c_null_char) then
         strlen = i - 1
         return
@@ -101,7 +101,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_create
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_create
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_create
 #endif
     type(c_ptr) :: handle
     type(heat_model), pointer :: m
@@ -113,7 +113,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_destroy
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_destroy
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_destroy
 #endif
     type(c_ptr), value, intent(in) :: handle
     type(heat_model), pointer :: m
@@ -126,7 +126,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_initialize
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_initialize
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_initialize
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: config_file(*)
@@ -147,7 +147,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_finalize
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_finalize
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_finalize
 #endif
     type(c_ptr), value, intent(in) :: handle
     integer(c_int)                 :: status
@@ -166,7 +166,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_component_name
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_component_name
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_component_name
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: name(BMI_MAX_COMPONENT_NAME)
@@ -180,7 +180,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_input_item_count
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_input_item_count
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_input_item_count
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int),        intent(out) :: count
@@ -194,7 +194,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_output_item_count
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_output_item_count
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_output_item_count
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int),        intent(out) :: count
@@ -209,7 +209,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_input_var_names
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_input_var_names
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_input_var_names
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: names(*)
@@ -225,7 +225,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_output_var_names
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_output_var_names
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_output_var_names
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: names(*)
@@ -243,7 +243,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_start_time
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_start_time
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_start_time
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time
@@ -257,7 +257,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_end_time
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_end_time
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_end_time
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time
@@ -273,7 +273,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_current_time
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_current_time
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_current_time
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time
@@ -289,7 +289,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_time_step
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_time_step
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_time_step
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time_step
@@ -305,7 +305,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_time_units
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_time_units
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_time_units
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: units(BMI_MAX_VAR_NAME)
@@ -322,7 +322,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_update
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_update
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_update
 #endif
     type(c_ptr), value, intent(in) :: handle
     integer(c_int)                 :: status
@@ -337,7 +337,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_update_until
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_update_until
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_update_until
 #endif
     type(c_ptr),    value, intent(in) :: handle
     real(c_double), value, intent(in) :: time
@@ -356,7 +356,7 @@ contains
     end do
     if (real(m%t, c_double) < time) then
       dt_save = m%dt
-      m%dt = real(time - real(m%t, c_double))
+      m%dt = real(time - real(m%t, c_double), kind=kind(m%dt))
       call advance_in_time(m)
       m%dt = dt_save
     end if
@@ -372,7 +372,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_grid
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_grid
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_var_grid
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -395,7 +395,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_type
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_type
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_var_type
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -421,7 +421,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_units
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_units
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_var_units
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -446,7 +446,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_itemsize
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_itemsize
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_var_itemsize
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -473,7 +473,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_nbytes
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_nbytes
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_var_nbytes
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -501,7 +501,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_location
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_location
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_var_location
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -520,7 +520,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_rank
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_rank
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_rank
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -538,7 +538,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_size
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_size
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_size
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -558,7 +558,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_type
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_type
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_type
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     integer(c_int),         value, intent(in)  :: grid
@@ -583,7 +583,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_shape
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_shape
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_shape
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -606,7 +606,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_spacing
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_spacing
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_spacing
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -628,7 +628,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_origin
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_origin
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_origin
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -648,7 +648,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_x
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_x
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_x
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -664,7 +664,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_y
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_y
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_y
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -680,7 +680,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_z
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_z
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_z
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -696,7 +696,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_node_count
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_node_count
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_node_count
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -716,7 +716,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_edge_count
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_edge_count
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_edge_count
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -730,7 +730,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_face_count
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_face_count
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_face_count
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
@@ -744,12 +744,13 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_edge_nodes
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_edge_nodes
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_edge_nodes
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: edge_nodes(*)
     integer(c_int)                     :: status
+    edge_nodes(1) = -1_c_int
     status = BMI_FAILURE
   end function bmi_get_grid_edge_nodes
 
@@ -758,12 +759,13 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_face_edges
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_face_edges
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_face_edges
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: face_edges(*)
     integer(c_int)                     :: status
+    face_edges(1) = -1_c_int
     status = BMI_FAILURE
   end function bmi_get_grid_face_edges
 
@@ -772,12 +774,13 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_face_nodes
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_face_nodes
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_face_nodes
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: face_nodes(*)
     integer(c_int)                     :: status
+    face_nodes(1) = -1_c_int
     status = BMI_FAILURE
   end function bmi_get_grid_face_nodes
 
@@ -786,12 +789,13 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_nodes_per_face
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_nodes_per_face
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_grid_nodes_per_face
 #endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: nodes_per_face(*)
     integer(c_int)                     :: status
+    nodes_per_face(1) = -1_c_int
     status = BMI_FAILURE
   end function bmi_get_grid_nodes_per_face
 
@@ -806,7 +810,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_int
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_int
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_int
 #endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
@@ -830,7 +834,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_float
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_float
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_float
 #endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
@@ -861,7 +865,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_double
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_double
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_double
 #endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
@@ -897,7 +901,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_ptr
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_ptr
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_ptr
 #endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
@@ -920,7 +924,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_at_indices_int
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_at_indices_int
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_at_indices_int
 #endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
@@ -949,7 +953,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_at_indices_float
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_at_indices_float
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_at_indices_float
 #endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
@@ -985,7 +989,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_at_indices_double
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_at_indices_double
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_get_value_at_indices_double
 #endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
@@ -1025,7 +1029,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_int
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_int
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_set_value_int
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
@@ -1049,7 +1053,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_float
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_float
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_set_value_float
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
@@ -1080,7 +1084,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_double
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_double
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_set_value_double
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
@@ -1114,7 +1118,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_at_indices_int
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_at_indices_int
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_set_value_at_indices_int
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
@@ -1139,7 +1143,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_at_indices_float
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_at_indices_float
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_set_value_at_indices_float
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
@@ -1172,7 +1176,7 @@ contains
 #ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_at_indices_double
 #else
-    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_at_indices_double
+    !GCC$ ATTRIBUTES VISIBILITY="default" :: bmi_set_value_at_indices_double
 #endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)

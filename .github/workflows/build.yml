@@ -39,7 +39,7 @@ jobs:
             $FC //LD $INCLUDE_DIR -o libbmi_heat.dll $MODEL_FILE $SOURCE_FILE
           else
             echo "Building Shared Object for Linux..."
-            $FC -shared -fPIC $INCLUDE_DIR -o libbmi_heat.so $MODEL_FILE $SOURCE_FILE
+            $FC -shared -fPIC -fpp $INCLUDE_DIR -o libbmi_heat.so $MODEL_FILE $SOURCE_FILE
           fi
 
       - name: Harvest Intel Runtime Libraries

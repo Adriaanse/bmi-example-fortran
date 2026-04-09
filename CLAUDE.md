@@ -45,11 +45,11 @@ CMake requires the `bmif` Fortran BMI bindings to be installed and discoverable 
 The CI workflow (`build.yml`) bypasses CMake/fpm and compiles directly with the Intel Fortran compiler (`ifx`) into a single shared library:
 
 ```bash
-# Linux
-$FC -shared -fPIC -Iheat -o libbmi_heat.so heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90
+# Linux  (-fpp enables C preprocessor for #ifdef guards)
+$FC -shared -fPIC -fpp -Iheat -o libbmi_heat.so heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90 bmi_heat/bmi_c_wrapper.f90
 
-# Windows
-$FC //LD -Iheat -o libbmi_heat.dll heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90
+# Windows  (ifx //LD enables preprocessor by default)
+$FC //LD -Iheat -o libbmi_heat.dll heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90 bmi_heat/bmi_c_wrapper.f90
 ```
 
 `bmi.f90` is downloaded directly from `csdms/bmi-fortran` master during CI.
@@ -131,11 +131,26 @@ Returns a raw `Pointer` to the model's internal temperature buffer (currently on
 
 `bmi_create`, `bmi_destroy`, `bmi_initialize`, `bmi_finalize`, `bmi_get_component_name`, `bmi_get_input_item_count`, `bmi_get_output_item_count`, `bmi_get_input_var_names`, `bmi_get_output_var_names`, `bmi_get_start_time`, `bmi_get_end_time`, `bmi_get_current_time`, `bmi_get_time_step`, `bmi_get_time_units`, `bmi_update`, `bmi_update_until`, `bmi_get_var_grid`, `bmi_get_var_type`, `bmi_get_var_units`, `bmi_get_var_itemsize`, `bmi_get_var_nbytes`, `bmi_get_var_location`, `bmi_get_grid_rank`, `bmi_get_grid_size`, `bmi_get_grid_type`, `bmi_get_grid_shape`, `bmi_get_grid_spacing`, `bmi_get_grid_origin`, `bmi_get_grid_x/y/z`, `bmi_get_grid_node/edge/face_count`, `bmi_get_grid_edge_nodes`, `bmi_get_grid_face_edges/nodes`, `bmi_get_grid_nodes_per_face`, `bmi_get_value_int/float/double`, `bmi_get_value_ptr`, `bmi_get_value_at_indices_int/float/double`, `bmi_set_value_int/float/double`, `bmi_set_value_at_indices_int/float/double`
 
+### Cross-platform symbol visibility
+
+Each exported function in `bmi_c_wrapper.f90` uses a preprocessor guard to select the correct compiler directive:
+
+```fortran
+#ifdef _WIN32
+  !DEC$ ATTRIBUTES DLLEXPORT :: bmi_initialize
+#else
+  !GCC$ ATTRIBUTES VISIBILITY :: bmi_initialize
+#endif
+```
+
+- `_WIN32` is defined automatically by `ifx` on Windows.
+- On Linux, `-fpp` must be passed to `ifx` to activate C preprocessing (added to the Linux CI build command). Windows `ifx //LD` enables the preprocessor by default.
+
 ### Known limitations / future work
 
 - `bmi_get_value_ptr` only supports `real(c_float)` (the only variable with a working `get_value_ptr` implementation in `bmi_heat.f90`)
 - `get_value_at_indices` and `set_value_at_indices` for int and double types always return `BMI_FAILURE` (unimplemented stubs in `bmi_heat.f90`)
-- `!DEC$ ATTRIBUTES DLLEXPORT` is Intel Fortran (ifx) specific — replace with `!GCC$ ATTRIBUTES DLLEXPORT` for gfortran on Windows
+- `!DEC$ ATTRIBUTES DLLEXPORT` / `!GCC$ ATTRIBUTES VISIBILITY` are compiler-specific directives — see the `#ifdef _WIN32` guards in `bmi_c_wrapper.f90`
 - `bmi_create` uses `c_loc` on a non-interoperable derived type (`bmi_heat` extends abstract `bmi`); this is an ifx extension, not strictly standard Fortran
 
 ## Constraints

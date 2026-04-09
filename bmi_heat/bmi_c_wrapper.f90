@@ -65,7 +65,11 @@ contains
   ! ============================================================
 
   function bmi_create() result(handle) bind(C, name="bmi_create")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_create
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_create
+#endif
     type(c_ptr) :: handle
     type(bmi_heat), pointer :: self
     allocate(self)
@@ -73,7 +77,11 @@ contains
   end function bmi_create
 
   subroutine bmi_destroy(handle) bind(C, name="bmi_destroy")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_destroy
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_destroy
+#endif
     type(c_ptr), value, intent(in) :: handle
     type(bmi_heat), pointer :: self
     call c_f_pointer(handle, self)
@@ -82,7 +90,11 @@ contains
 
   function bmi_initialize(handle, config_file) result(status) &
       bind(C, name="bmi_initialize")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_initialize
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_initialize
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: config_file(*)
     integer(c_int)                            :: status
@@ -94,7 +106,11 @@ contains
   end function bmi_initialize
 
   function bmi_finalize(handle) result(status) bind(C, name="bmi_finalize")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_finalize
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_finalize
+#endif
     type(c_ptr), value, intent(in) :: handle
     integer(c_int)                 :: status
     type(bmi_heat), pointer :: self
@@ -108,7 +124,11 @@ contains
 
   function bmi_get_component_name(handle, name) result(status) &
       bind(C, name="bmi_get_component_name")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_component_name
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_component_name
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: name(BMI_MAX_COMPONENT_NAME)
     integer(c_int)                             :: status
@@ -121,7 +141,11 @@ contains
 
   function bmi_get_input_item_count(handle, count) result(status) &
       bind(C, name="bmi_get_input_item_count")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_input_item_count
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_input_item_count
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int),        intent(out) :: count
     integer(c_int)                     :: status
@@ -134,7 +158,11 @@ contains
 
   function bmi_get_output_item_count(handle, count) result(status) &
       bind(C, name="bmi_get_output_item_count")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_output_item_count
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_output_item_count
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int),        intent(out) :: count
     integer(c_int)                     :: status
@@ -150,7 +178,11 @@ contains
   ! Caller allocates after bmi_get_input_item_count.
   function bmi_get_input_var_names(handle, names) result(status) &
       bind(C, name="bmi_get_input_var_names")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_input_var_names
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_input_var_names
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: names(*)
     integer(c_int)                             :: status
@@ -169,7 +201,11 @@ contains
 
   function bmi_get_output_var_names(handle, names) result(status) &
       bind(C, name="bmi_get_output_var_names")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_output_var_names
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_output_var_names
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: names(*)
     integer(c_int)                             :: status
@@ -192,7 +228,11 @@ contains
 
   function bmi_get_start_time(handle, time) result(status) &
       bind(C, name="bmi_get_start_time")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_start_time
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_start_time
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time
     integer(c_int)                     :: status
@@ -205,7 +245,11 @@ contains
 
   function bmi_get_end_time(handle, time) result(status) &
       bind(C, name="bmi_get_end_time")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_end_time
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_end_time
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time
     integer(c_int)                     :: status
@@ -218,7 +262,11 @@ contains
 
   function bmi_get_current_time(handle, time) result(status) &
       bind(C, name="bmi_get_current_time")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_current_time
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_current_time
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time
     integer(c_int)                     :: status
@@ -231,7 +279,11 @@ contains
 
   function bmi_get_time_step(handle, time_step) result(status) &
       bind(C, name="bmi_get_time_step")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_time_step
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_time_step
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     real(c_double),        intent(out) :: time_step
     integer(c_int)                     :: status
@@ -244,7 +296,11 @@ contains
 
   function bmi_get_time_units(handle, units) result(status) &
       bind(C, name="bmi_get_time_units")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_time_units
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_time_units
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(out) :: units(MAX_STR_LEN)
     integer(c_int)                             :: status
@@ -260,7 +316,11 @@ contains
   ! ============================================================
 
   function bmi_update(handle) result(status) bind(C, name="bmi_update")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_update
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_update
+#endif
     type(c_ptr), value, intent(in) :: handle
     integer(c_int)                 :: status
     type(bmi_heat), pointer :: self
@@ -270,7 +330,11 @@ contains
 
   function bmi_update_until(handle, time) result(status) &
       bind(C, name="bmi_update_until")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_update_until
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_update_until
+#endif
     type(c_ptr),    value, intent(in) :: handle
     real(c_double), value, intent(in) :: time
     integer(c_int)                    :: status
@@ -285,7 +349,11 @@ contains
 
   function bmi_get_var_grid(handle, name, grid) result(status) &
       bind(C, name="bmi_get_var_grid")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_grid
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_grid
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     integer(c_int),                intent(out) :: grid
@@ -301,7 +369,11 @@ contains
 
   function bmi_get_var_type(handle, name, var_type) result(status) &
       bind(C, name="bmi_get_var_type")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_type
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_type
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     character(kind=c_char),        intent(out) :: var_type(MAX_STR_LEN)
@@ -317,7 +389,11 @@ contains
 
   function bmi_get_var_units(handle, name, units) result(status) &
       bind(C, name="bmi_get_var_units")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_units
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_units
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     character(kind=c_char),        intent(out) :: units(MAX_STR_LEN)
@@ -333,7 +409,11 @@ contains
 
   function bmi_get_var_itemsize(handle, name, itemsize) result(status) &
       bind(C, name="bmi_get_var_itemsize")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_itemsize
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_itemsize
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     integer(c_int),                intent(out) :: itemsize
@@ -349,7 +429,11 @@ contains
 
   function bmi_get_var_nbytes(handle, name, nbytes) result(status) &
       bind(C, name="bmi_get_var_nbytes")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_nbytes
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_nbytes
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     integer(c_int),                intent(out) :: nbytes
@@ -365,7 +449,11 @@ contains
 
   function bmi_get_var_location(handle, name, location) result(status) &
       bind(C, name="bmi_get_var_location")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_var_location
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_var_location
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     character(kind=c_char),        intent(out) :: location(MAX_STR_LEN)
@@ -385,7 +473,11 @@ contains
 
   function bmi_get_grid_rank(handle, grid, rank) result(status) &
       bind(C, name="bmi_get_grid_rank")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_rank
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_rank
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: rank
@@ -399,7 +491,11 @@ contains
 
   function bmi_get_grid_size(handle, grid, size) result(status) &
       bind(C, name="bmi_get_grid_size")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_size
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_size
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: size
@@ -413,7 +509,11 @@ contains
 
   function bmi_get_grid_type(handle, grid, grid_type) result(status) &
       bind(C, name="bmi_get_grid_type")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_type
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_type
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     integer(c_int),         value, intent(in)  :: grid
     character(kind=c_char),        intent(out) :: grid_type(MAX_STR_LEN)
@@ -428,7 +528,11 @@ contains
   ! n = rank (caller obtains from bmi_get_grid_rank first)
   function bmi_get_grid_shape(handle, grid, shape, n) result(status) &
       bind(C, name="bmi_get_grid_shape")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_shape
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_shape
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     integer(c_int),        intent(out) :: shape(n)
@@ -445,7 +549,11 @@ contains
   ! n = rank
   function bmi_get_grid_spacing(handle, grid, spacing, n) result(status) &
       bind(C, name="bmi_get_grid_spacing")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_spacing
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_spacing
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     real(c_double),        intent(out) :: spacing(n)
@@ -462,7 +570,11 @@ contains
   ! n = rank
   function bmi_get_grid_origin(handle, grid, origin, n) result(status) &
       bind(C, name="bmi_get_grid_origin")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_origin
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_origin
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     real(c_double),        intent(out) :: origin(n)
@@ -478,7 +590,11 @@ contains
 
   function bmi_get_grid_x(handle, grid, x, n) result(status) &
       bind(C, name="bmi_get_grid_x")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_x
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_x
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     real(c_double),        intent(out) :: x(n)
@@ -494,7 +610,11 @@ contains
 
   function bmi_get_grid_y(handle, grid, y, n) result(status) &
       bind(C, name="bmi_get_grid_y")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_y
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_y
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     real(c_double),        intent(out) :: y(n)
@@ -510,7 +630,11 @@ contains
 
   function bmi_get_grid_z(handle, grid, z, n) result(status) &
       bind(C, name="bmi_get_grid_z")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_z
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_z
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     real(c_double),        intent(out) :: z(n)
@@ -526,7 +650,11 @@ contains
 
   function bmi_get_grid_node_count(handle, grid, count) result(status) &
       bind(C, name="bmi_get_grid_node_count")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_node_count
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_node_count
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: count
@@ -540,7 +668,11 @@ contains
 
   function bmi_get_grid_edge_count(handle, grid, count) result(status) &
       bind(C, name="bmi_get_grid_edge_count")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_edge_count
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_edge_count
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: count
@@ -554,7 +686,11 @@ contains
 
   function bmi_get_grid_face_count(handle, grid, count) result(status) &
       bind(C, name="bmi_get_grid_face_count")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_face_count
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_face_count
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid
     integer(c_int),        intent(out) :: count
@@ -568,7 +704,11 @@ contains
 
   function bmi_get_grid_edge_nodes(handle, grid, edge_nodes, n) result(status) &
       bind(C, name="bmi_get_grid_edge_nodes")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_edge_nodes
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_edge_nodes
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     integer(c_int),        intent(out) :: edge_nodes(n)
@@ -584,7 +724,11 @@ contains
 
   function bmi_get_grid_face_edges(handle, grid, face_edges, n) result(status) &
       bind(C, name="bmi_get_grid_face_edges")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_face_edges
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_face_edges
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     integer(c_int),        intent(out) :: face_edges(n)
@@ -600,7 +744,11 @@ contains
 
   function bmi_get_grid_face_nodes(handle, grid, face_nodes, n) result(status) &
       bind(C, name="bmi_get_grid_face_nodes")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_face_nodes
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_face_nodes
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     integer(c_int),        intent(out) :: face_nodes(n)
@@ -616,7 +764,11 @@ contains
 
   function bmi_get_grid_nodes_per_face(handle, grid, nodes_per_face, n) result(status) &
       bind(C, name="bmi_get_grid_nodes_per_face")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_grid_nodes_per_face
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_grid_nodes_per_face
+#endif
     type(c_ptr),    value, intent(in)  :: handle
     integer(c_int), value, intent(in)  :: grid, n
     integer(c_int),        intent(out) :: nodes_per_face(n)
@@ -636,7 +788,11 @@ contains
 
   function bmi_get_value_int(handle, name, dest, n) result(status) &
       bind(C, name="bmi_get_value_int")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_int
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_int
+#endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
     integer(c_int),                intent(inout) :: dest(n)
@@ -656,7 +812,11 @@ contains
 
   function bmi_get_value_float(handle, name, dest, n) result(status) &
       bind(C, name="bmi_get_value_float")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_float
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_float
+#endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
     real(c_float),                 intent(inout) :: dest(n)
@@ -676,7 +836,11 @@ contains
 
   function bmi_get_value_double(handle, name, dest, n) result(status) &
       bind(C, name="bmi_get_value_double")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_double
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_double
+#endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
     real(c_double),                intent(inout) :: dest(n)
@@ -700,7 +864,11 @@ contains
   ! dest_ptr is set to c_null_ptr on failure.
   function bmi_get_value_ptr(handle, name, dest_ptr) result(status) &
       bind(C, name="bmi_get_value_ptr")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_ptr
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_ptr
+#endif
     type(c_ptr),            value, intent(in)  :: handle
     character(kind=c_char),        intent(in)  :: name(*)
     type(c_ptr),                   intent(out) :: dest_ptr
@@ -720,7 +888,11 @@ contains
 
   function bmi_get_value_at_indices_int(handle, name, dest, inds, n) result(status) &
       bind(C, name="bmi_get_value_at_indices_int")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_at_indices_int
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_at_indices_int
+#endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
     integer(c_int),                intent(inout) :: dest(n)
@@ -742,7 +914,11 @@ contains
 
   function bmi_get_value_at_indices_float(handle, name, dest, inds, n) result(status) &
       bind(C, name="bmi_get_value_at_indices_float")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_at_indices_float
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_at_indices_float
+#endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
     real(c_float),                 intent(inout) :: dest(n)
@@ -765,7 +941,11 @@ contains
 
   function bmi_get_value_at_indices_double(handle, name, dest, inds, n) result(status) &
       bind(C, name="bmi_get_value_at_indices_double")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_get_value_at_indices_double
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_get_value_at_indices_double
+#endif
     type(c_ptr),            value, intent(in)    :: handle
     character(kind=c_char),        intent(in)    :: name(*)
     real(c_double),                intent(inout) :: dest(n)
@@ -792,7 +972,11 @@ contains
 
   function bmi_set_value_int(handle, name, src, n) result(status) &
       bind(C, name="bmi_set_value_int")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_int
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_int
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
     integer(c_int),                intent(in) :: src(n)
@@ -811,7 +995,11 @@ contains
 
   function bmi_set_value_float(handle, name, src, n) result(status) &
       bind(C, name="bmi_set_value_float")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_float
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_float
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
     real(c_float),                 intent(in) :: src(n)
@@ -830,7 +1018,11 @@ contains
 
   function bmi_set_value_double(handle, name, src, n) result(status) &
       bind(C, name="bmi_set_value_double")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_double
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_double
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
     real(c_double),                intent(in) :: src(n)
@@ -849,7 +1041,11 @@ contains
 
   function bmi_set_value_at_indices_int(handle, name, inds, src, n) result(status) &
       bind(C, name="bmi_set_value_at_indices_int")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_at_indices_int
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_at_indices_int
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
     integer(c_int),                intent(in) :: inds(n)
@@ -870,7 +1066,11 @@ contains
 
   function bmi_set_value_at_indices_float(handle, name, inds, src, n) result(status) &
       bind(C, name="bmi_set_value_at_indices_float")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_at_indices_float
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_at_indices_float
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
     integer(c_int),                intent(in) :: inds(n)
@@ -892,7 +1092,11 @@ contains
 
   function bmi_set_value_at_indices_double(handle, name, inds, src, n) result(status) &
       bind(C, name="bmi_set_value_at_indices_double")
+#ifdef _WIN32
     !DEC$ ATTRIBUTES DLLEXPORT :: bmi_set_value_at_indices_double
+#else
+    !GCC$ ATTRIBUTES VISIBILITY :: bmi_set_value_at_indices_double
+#endif
     type(c_ptr),            value, intent(in) :: handle
     character(kind=c_char),        intent(in) :: name(*)
     integer(c_int),                intent(in) :: inds(n)

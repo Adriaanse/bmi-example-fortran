@@ -32,7 +32,7 @@ jobs:
           # Download ONLY the bmi.f90 file from the master branch
           curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90
           INCLUDE_DIR="-Iheat"
-          SOURCE_FILE="bmi.f90 bmi_heat/bmi_heat.f90 bmi_heat/bmi_c_wrapper.f90"
+          SOURCE_FILE="bmi.f90 bmi_heat/bmi_heat_shared.f90"
           MODEL_FILE="heat/heat.f90"
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Building DLL for Windows..."

@@ -48,8 +48,8 @@ The CI workflow (`build.yml`) bypasses CMake/fpm and compiles directly with the 
 # Linux  (-fpp enables C preprocessor for #ifdef guards)
 $FC -shared -fPIC -fpp -Iheat -o libbmi_heat.so heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90 bmi_heat/bmi_c_wrapper.f90
 
-# Windows  (ifx //LD enables preprocessor by default)
-$FC //LD -Iheat -o libbmi_heat.dll heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90 bmi_heat/bmi_c_wrapper.f90
+# Windows  (//fpp enables C preprocessor; // is bash syntax for ifx's /fpp flag)
+$FC //LD //fpp -Iheat -o libbmi_heat.dll heat/heat.f90 bmi.f90 bmi_heat/bmi_heat.f90 bmi_heat/bmi_c_wrapper.f90
 ```
 
 `bmi.f90` is downloaded directly from `csdms/bmi-fortran` master during CI.
@@ -144,7 +144,7 @@ Each exported function in `bmi_c_wrapper.f90` uses a preprocessor guard to selec
 ```
 
 - `_WIN32` is defined automatically by `ifx` on Windows.
-- On Linux, `-fpp` must be passed to `ifx` to activate C preprocessing (added to the Linux CI build command). Windows `ifx //LD` enables the preprocessor by default.
+- Both platforms require an explicit preprocessor flag: `-fpp` on Linux, `//fpp` on Windows (the `//` is bash syntax for ifx's `/fpp` flag).
 
 ### Known limitations / future work
 

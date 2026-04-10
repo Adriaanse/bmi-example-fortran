@@ -50,21 +50,15 @@ jobs:
 
           echo check the path:
           echo "CMPLR_ROOT is: $CMPLR_ROOT"
-          ls "$CMPLR_ROOT/lib/" | grep -E "libifcore|libimf|libsvml|libintlc"
-                  
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            REDIST="$CMPLR_ROOT/bin"
-            cp "$REDIST/libifcoremd.dll" ./intel_redist/
-            cp "$REDIST/libmmd.dll" ./intel_redist/
-            cp "$REDIST/svml_dispmd.dll" ./intel_redist/
-            cp "$REDIST/libiomp5md.dll" ./intel_redist/
+            echo "Checking bin:"
+            ls "$CMPLR_ROOT/bin/" | grep -iE "libifcore|libmmd|svml|iomp" || echo "nothing found in bin"
+            echo "Checking redist:"
+            ls "$CMPLR_ROOT/redist/" | grep -iE "libifcore|libmmd|svml|iomp" || echo "nothing found in redist"
           else
-            REDIST="$CMPLR_ROOT/lib"
-            cp "$REDIST/libifcore.so.5" ./intel_redist/
-            cp "$REDIST/libimf.so" ./intel_redist/
-            cp "$REDIST/libsvml.so" ./intel_redist/
-            cp "$REDIST/libintlc.so.5" ./intel_redist/
-          fi
+            echo "Checking lib:"
+            ls "$CMPLR_ROOT/lib/" | grep -E "libifcore|libimf|libsvml|libintlc" || echo "nothing found in lib"
+          fi                  
           
       - name: Upload Compiled Libraries
         uses: actions/upload-artifact@v4

@@ -57,6 +57,7 @@ jobs:
             cp "/opt/intel/oneapi/compiler/2025.2/lib/libimf.so" ./intel_redist/
             cp "/opt/intel/oneapi/compiler/2025.2/lib/libintlc.so.5" ./intel_redist/
             cp "/opt/intel/oneapi/compiler/2025.2/lib/libsvml.so" ./intel_redist/
+            cp "/opt/intel/oneapi/compiler/2025.2/lib/libifport.so.5" ./intel_redist/
           fi
           echo "Harvested libraries:"
           ls -la ./intel_redist/

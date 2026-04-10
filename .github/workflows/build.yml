@@ -24,7 +24,7 @@ jobs:
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: intel
-          version: '2024.1'
+          version: '2025.3.0'
 
       - name: Build Shared Library
         shell: bash
@@ -48,17 +48,18 @@ jobs:
           echo "Creating a folder to hold the runtime libraries..."
           mkdir -p intel_redist
 
-          echo check the path:
-          echo "CMPLR_ROOT is: $CMPLR_ROOT"
+          echo "Checking 2025.3 paths:"
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            echo "Checking bin:"
-            ls "$CMPLR_ROOT/bin/" | grep -iE "libifcore|libmmd|svml|iomp" || echo "nothing found in bin"
-            echo "Checking redist:"
-            ls "$CMPLR_ROOT/redist/" | grep -iE "libifcore|libmmd|svml|iomp" || echo "nothing found in redist"
+            echo "--- bin ---"
+            ls "C:/Program Files (x86)/Intel/oneAPI/compiler/2025.3/windows/bin/" | grep -iE "libifcore|libmmd|svml|iomp" || echo "not found in bin"
+            echo "--- redist ---"
+            ls "C:/Program Files (x86)/Intel/oneAPI/compiler/2025.3/windows/redist/intel64/compiler/" | grep -iE "libifcore|libmmd|svml|iomp" || echo "not found in redist"
           else
-            echo "Checking lib:"
-            ls "$CMPLR_ROOT/lib/" | grep -E "libifcore|libimf|libsvml|libintlc" || echo "nothing found in lib"
-          fi                  
+            echo "--- lib ---"
+            ls "/opt/intel/oneapi/compiler/2025.3/lib/" | grep -E "libifcore|libimf|libsvml|libintlc" || echo "not found in lib"
+            echo "--- linux/compiler/lib/intel64 ---"
+            ls "/opt/intel/oneapi/compiler/2025.3/linux/compiler/lib/intel64/" | grep -E "libifcore|libimf|libsvml|libintlc" || echo "not found"
+          fi
           
       - name: Upload Compiled Libraries
         uses: actions/upload-artifact@v4

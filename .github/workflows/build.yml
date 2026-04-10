@@ -45,25 +45,27 @@ jobs:
       - name: Harvest Intel Runtime Libraries
         shell: bash
         run: |
-          echo "Creating a folder to hold the stolen libraries..."
+          echo "Creating a folder to hold the runtime libraries..."
           mkdir -p intel_redist
-          
-          echo "Hunting inside $ONEAPI_ROOT..."
-          
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            # Find the specific Windows DLLs and copy them
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libifcoremd.dll" -exec cp {} ./intel_redist/ \;
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libmmd.dll" -exec cp {} ./intel_redist/ \;
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "svml_dispmd.dll" -exec cp {} ./intel_redist/ \;
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libiomp5md.dll" -exec cp {} ./intel_redist/ \;
-          else
-            # Find the specific Linux SOs and copy them
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libifcore.so.5" -exec cp {} ./intel_redist/ \;
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libimf.so" -exec cp {} ./intel_redist/ \;
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libsvml.so" -exec cp {} ./intel_redist/ \;
-            find "$ONEAPI_ROOT" -path "*/intel64/*" -name "libintlc.so.5" -exec cp {} ./intel_redist/ \;
-          fi
 
+          echo check the path:
+          echo "CMPLR_ROOT is: $CMPLR_ROOT"
+          ls "$CMPLR_ROOT/lib/" | grep -E "libifcore|libimf|libsvml|libintlc"
+                  
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            REDIST="$CMPLR_ROOT/bin"
+            cp "$REDIST/libifcoremd.dll" ./intel_redist/
+            cp "$REDIST/libmmd.dll" ./intel_redist/
+            cp "$REDIST/svml_dispmd.dll" ./intel_redist/
+            cp "$REDIST/libiomp5md.dll" ./intel_redist/
+          else
+            REDIST="$CMPLR_ROOT/lib"
+            cp "$REDIST/libifcore.so.5" ./intel_redist/
+            cp "$REDIST/libimf.so" ./intel_redist/
+            cp "$REDIST/libsvml.so" ./intel_redist/
+            cp "$REDIST/libintlc.so.5" ./intel_redist/
+          fi
+          
       - name: Upload Compiled Libraries
         uses: actions/upload-artifact@v4
         with:

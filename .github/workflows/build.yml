@@ -61,6 +61,7 @@ jobs:
       - name: Build SO inside container
         run: |
           docker run -v ${{ github.workspace }}:/repo almalinux8-ifx bash -c "
+            source /opt/intel/oneapi/setvars.sh --force && \
             cd /repo && \
             curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90 && \
             ifx -shared -fPIC -fpp -Iheat -static-intel \

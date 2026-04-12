@@ -6,16 +6,16 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 
 /**
- * JNA interface for libbmi_heat (.so / .dll).
+ * JNA interface for BMI fortran (.so / .dll using C_ISO_BINDING).
  *
  * Derived from interop/bmi.h.  Load with:
  *
- *   StandardBmi lib = Native.load("bmi_heat", StandardBmi.class);
+ *   StandardBmi lib = Native.load("bmi_lib", StandardBmi.class);
  *
  * Typical lifecycle:
  *
- *   Pointer handle = lib.bmi_create();
- *   lib.bmi_initialize(handle, "test1.cfg\0");
+ *   Pointer handle = lib.bmi_create(); // model specific !
+ *   lib.bmi_initialize(handle, "test1.cfg");
  *   // ... use the model ...
  *   lib.bmi_finalize(handle);
  *   lib.bmi_destroy(handle);

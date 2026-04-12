@@ -142,7 +142,7 @@ int bmi_update_until(void* handle, double time);
 
 /**
  * Return the grid id for variable 'name'.
- * @param grid  out: 0 = uniform_rectilinear (temperature),
+ * @param grid  out: 0 = uniform_rectilinear,
  *                   1 = scalar (diffusivity, id)
  */
 int bmi_get_var_grid    (void* handle, const char* name, int* grid);
@@ -252,7 +252,6 @@ int bmi_get_value_double(void* handle, const char* name, double* dest, int n);
 
 /**
  * Return a raw pointer directly into the model's internal buffer (zero-copy).
- * Only "plate_surface__temperature" is supported; stored as float*.
  * The pointer remains valid until bmi_finalize() or bmi_destroy().
  * @param dest_ptr  out: pointer to the internal buffer, or NULL on failure
  */

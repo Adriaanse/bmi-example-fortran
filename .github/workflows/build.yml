@@ -5,17 +5,12 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Allows you to trigger the build manually
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
+  build-windows:
+    name: Build on windows-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,30 +21,56 @@ jobs:
           compiler: intel
           version: '2025.2'
 
-      - name: Build Shared Library
+      - name: Build DLL for Windows
         shell: bash
         run: |
-          # Download ONLY the bmi.f90 file from the master branch
           curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90
-          INCLUDE_DIR="-Iheat"
-          SOURCE_FILE="bmi.f90 bmi_heat/bmi_heat_shared.f90"
-          MODEL_FILE="heat/heat.f90"
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            echo "Building DLL for Windows..."
-            $FC //LD //fpp $INCLUDE_DIR -static-intel -o libbmi_heat.dll $MODEL_FILE $SOURCE_FILE
-          else
-            echo "Building Shared Object for Linux..."
-            $FC -shared -fPIC -fpp $INCLUDE_DIR -static-intel -o libbmi_heat.so $MODEL_FILE $SOURCE_FILE
-          fi
-          
-      - name: Upload Compiled Libraries
+          $FC //LD //fpp -Iheat -o libbmi_heat.dll \
+            heat/heat.f90 bmi.f90 bmi_heat/bmi_heat_shared.f90
+
+      - name: Harvest Intel Runtime Libraries
+        shell: bash
+        run: |
+          mkdir -p intel_redist
+          cp "$CMPLR_ROOT/bin/libifcoremd.dll" ./intel_redist/
+          cp "$CMPLR_ROOT/bin/libmmd.dll" ./intel_redist/
+          cp "$CMPLR_ROOT/bin/svml_dispmd.dll" ./intel_redist/
+          cp "$CMPLR_ROOT/bin/libiomp5md.dll" ./intel_redist/
+          echo "Harvested libraries:"
+          ls -la ./intel_redist/
+
+      - name: Upload Windows Library
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-library-${{ matrix.os }}
+          name: compiled-library-windows
           path: |
-            *.so
             *.dll
-            *.lib
             intel_redist/
           if-no-files-found: error
-          
+
+  build-linux:
+    name: Build on AlmaLinux 8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t almalinux8-ifx ./docker/
+
+      - name: Build SO inside container
+        run: |
+          docker run -v ${{ github.workspace }}:/repo almalinux8-ifx bash -c "
+            cd /repo && \
+            curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90 && \
+            ifx -shared -fPIC -fpp -Iheat -static-intel \
+              -o libbmi_heat.so \
+              heat/heat.f90 bmi.f90 bmi_heat/bmi_heat_shared.f90
+          "
+
+      - name: Upload Linux Library
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-library-linux
+          path: "*.so"
+          if-no-files-found: error

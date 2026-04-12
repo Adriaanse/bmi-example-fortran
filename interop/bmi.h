@@ -1,20 +1,30 @@
 /**
- * bmi.h
+ * bmi.h - Deltares BMI C interop convention
  *
- * C header for the BMI heat-equation shared library (libbmi_heat.so / libbmi_heat.dll).
- * Generated from bmi_heat/bmi_heat_shared.f90.
+ * This header defines a C-callable interface for Fortran BMI models,
+ * designed for Java/JNA interop. It deliberately differs from the
+ * CSDMS bmi-c specification in the following ways:
+ *
+ * 1. Flat functions with explicit void* handle instead of struct Bmi
+ * 2. Typed get/set_value_int/float/double instead of void*
+ * 3. Flat char* buffer for var name lists instead of char**
+ * 4. Explicit int n element count on all get/set_value* functions
+ * 5. Added bmi_create()/bmi_destroy() for Fortran heap management
+ *
+ * These changes make the interface directly usable from Java via JNA
+ * without unsafe casting or complex marshalling.
  *
  * Calling conventions
  * -------------------
- * All functions use the default C calling convention.
- * Every function (except bmi_create / bmi_destroy) returns int:
+ * All functions use the default C calling convention, requires compilation of the fortran code using ISO_C_BINDING
+ * Every function returns int:
  *   BMI_SUCCESS (0) on success, BMI_FAILURE (1) on failure.
  *
  * Handle
  * ------
- * bmi_create() allocates a heat_model on the Fortran heap and returns an
+ * bmi_create() or similar factory method allocates a heat_model on the Fortran heap and returns an
  * opaque void* to it.  Pass this handle as the first argument to every other
- * function.  Release it with bmi_destroy() when done.
+ * function.  Release it with bmi_destroy() or similar when done.
  *
  * String conventions
  * ------------------
@@ -65,21 +75,8 @@ extern "C" {
 /* ------------------------------------------------------------------ */
 
 /**
- * Allocate a new model instance and return an opaque handle.
- * The caller is responsible for calling bmi_destroy() when done.
- */
-void* bmi_create(void);
-
-/**
- * Free the model instance previously created with bmi_create().
- * After this call 'handle' is invalid.
- */
-void  bmi_destroy(void* handle);
-
-/**
  * Initialize the model.
- * @param config_file  Path to a plain-text config file (one line:
- *                     "alpha  t_end  n_x  n_y").
+ * @param config_file  Path to a plain-text config file
  *                     Pass an empty string "" to use built-in defaults.
  */
 int   bmi_initialize(void* handle, const char* config_file);
@@ -171,13 +168,11 @@ int bmi_get_var_location(void* handle, const char* name, char* location);
 
 /**
  * Return the rank (number of dimensions) of grid 'grid'.
- * Grid 0 (temperature): rank 2.  Grid 1 (scalar): rank 0.
  */
 int bmi_get_grid_rank(void* handle, int grid, int* rank);
 
 /**
  * Return the total number of nodes in grid 'grid'.
- * Grid 0: n_x * n_y.  Grid 1: 1.
  */
 int bmi_get_grid_size(void* handle, int grid, int* size);
 

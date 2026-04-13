@@ -24,9 +24,14 @@ jobs:
       - name: Build DLL for Windows
         shell: bash
         run: |
-          curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90
-          $FC //LD //fpp -Iheat -o libbmi_heat.dll \
-            heat/heat.f90 bmi.f90 bmi_heat/bmi_heat_shared.f90
+          $FC //LD //fpp -Iheat //MD \
+            -o libbmi_heat.dll \
+            heat/heat.f90 \
+            bmi_heat/bmi.f90 \
+            bmi_heat/bmif_2_0_iso.f90 \
+            bmi_heat/iso_c_bmif_2_0.f90 \
+            bmi_heat/bmi_heat.f90 \
+            bmi_heat/register_bmi.f90
 
       - name: Harvest Intel Runtime Libraries
         shell: bash
@@ -63,10 +68,14 @@ jobs:
           docker run -v ${{ github.workspace }}:/repo almalinux8-ifx bash -c "
             source /opt/intel/oneapi/setvars.sh --force && \
             cd /repo && \
-            curl -O https://raw.githubusercontent.com/csdms/bmi-fortran/master/bmi.f90 && \
-            ifx -shared -fPIC -fpp -Iheat -static-intel \
-              -o libbmi_heat.so \
-              heat/heat.f90 bmi.f90 bmi_heat/bmi_heat_shared.f90
+            ifx  -shared -fPIC -fpp -Iheat -static-intel \
+            -o libbmi_heat.so \
+            heat/heat.f90 \
+            bmi_heat/bmi.f90 \
+            bmi_heat/bmif_2_0_iso.f90 \
+            bmi_heat/iso_c_bmif_2_0.f90 \
+            bmi_heat/bmi_heat.f90 \
+            bmi_heat/register_bmi.f90
           "
 
       - name: Upload Linux Library

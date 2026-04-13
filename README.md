@@ -179,3 +179,108 @@ If you built the model using fpm, you can alternatively run the
 program using
 
     fpm run -- test.cfg
+
+---
+
+## Deltares FEWS / Java interop
+
+This fork adds a C/Java interoperability layer on top of the standard BMI
+implementation, following the [NOAA-OWP NextGen `iso_c_fortran_bmi`](https://github.com/NOAA-OWP/ngen/tree/development/extern/iso_c_fortran_bmi)
+pattern. This allows the model to be called from Java via
+[JNA (Java Native Access)](https://github.com/java-native-access/jna)
+inside [Deltares FEWS](https://www.deltares.nl/en/software-and-data/products/delft-fews).
+
+### Architecture
+
+```
+Java (FEWS)
+    │  JNA – interop/FortranModelJnaLibrary.java
+    ▼
+libbmi_heat.so / .dll
+    ├── register_bmi.f90          model-specific factory function
+    ├── iso_c_bmif_2_0.f90        generic C-interop layer (all 50+ BMI functions)
+    │       uses ↓
+    ├── bmif_2_0_iso.f90          BMI abstract type with ISO C integer kinds
+    │       extends ↓
+    ├── bmi.f90                   CSDMS BMI v2.0 abstract spec
+    │
+    └── bmi_heat.f90              concrete heat-model BMI implementation
+            uses ↓
+        heat.f90                  2D heat equation physics
+```
+
+### Opaque handle pattern
+
+`register_bmi(void** handle)` allocates a `bmi_heat` instance, wraps it in a
+thin Fortran `box` type, and returns `c_loc(box)` as an opaque `void*`. Every
+other BMI function takes this handle, recovers the Fortran object with
+`c_f_pointer`, and dispatches polymorphically.
+
+`finalize(void* handle)` **both** runs the BMI finalize method **and**
+deallocates the model. There is no separate `bmi_destroy()` — do not use
+the handle after calling `finalize`.
+
+### FEWS build (GitHub Actions)
+
+| Platform | Container / runner | Compiler | Output |
+|----------|--------------------|----------|--------|
+| Linux | AlmaLinux 8 Docker (`docker/Dockerfile`) | Intel ifx 2025.2 | `libbmi_heat.so` (statically linked Intel runtime) |
+| Windows | `windows-latest` | Intel ifx 2025.2 | `libbmi_heat.dll` + 4 Intel runtime DLLs |
+
+### Java usage (JNA)
+
+```java
+import bmi.model.FortranModelJnaLibrary;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.Memory;
+import com.sun.jna.ptr.*;
+
+// Load the shared library
+FortranModelJnaLibrary lib =
+    Native.load("bmi_heat", FortranModelJnaLibrary.class);
+
+// Allocate the model
+PointerByReference handleRef = new PointerByReference();
+lib.register_bmi(handleRef);
+Pointer handle = handleRef.getValue();
+
+// Initialize
+lib.initialize(handle, "/path/to/config.cfg");
+
+// Find grid size for a variable
+IntByReference gridRef = new IntByReference();
+lib.get_var_grid(handle, "plate_surface__temperature", gridRef);
+IntByReference sizeRef = new IntByReference();
+lib.get_grid_size(handle, gridRef, sizeRef);
+
+// Run one step and retrieve results
+lib.update(handle);
+float[] dest = new float[sizeRef.getValue()];
+lib.get_value_float(handle, "plate_surface__temperature", dest);
+
+// Finalize (also frees memory)
+lib.finalize(handle);
+```
+
+### Interop files
+
+| File | Purpose |
+|------|---------|
+| `interop/bmi.h` | C header with exact exported symbol signatures and ABI notes |
+| `interop/FortranModelJnaLibrary.java` | JNA interface (`bmi.model` package) |
+| `interop/bmi_from_spec.h` | Reference header derived from the abstract Fortran spec (not the actual ABI) |
+
+See `interop/bmi.h` for important ABI differences from the abstract spec,
+including known stub implementations and a bug in `get_grid_edge_nodes`.
+
+### Known limitations
+
+- `get_value_ptr_*` — not implemented; always returns `BMI_FAILURE`.
+- `get/set_value_at_indices_*` — not implemented; always returns `BMI_FAILURE`.
+- `get_grid_edge_nodes` — contains a logic bug in `iso_c_bmif_2_0.f90`
+  (line 893) that may cause incorrect array sizing. See `interop/bmi.h` (BUG 1).
+
+### Credits
+
+- NOAA-OWP `iso_c_fortran_bmi` interop layer: Nels Frazier, NOAA OWP (Apache 2.0)

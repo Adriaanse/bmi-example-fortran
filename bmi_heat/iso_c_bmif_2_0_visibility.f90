@@ -111,3 +111,7 @@
 !GCC$ ATTRIBUTES VISIBILITY="default" :: get_grid_face_nodes
 !GCC$ ATTRIBUTES VISIBILITY="default" :: get_grid_nodes_per_face
 #endif
+
+! Dummy module to satisfy Fortran syntax requirements
+module iso_c_bmif_2_0_visibility
+end module iso_c_bmif_2_0_visibility

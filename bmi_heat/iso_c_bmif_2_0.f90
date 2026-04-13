@@ -20,8 +20,6 @@ module iso_c_bmif_2_0
 
   contains
 
-contains
-
 ! ----------------------------------------------------------------
 ! Symbol visibility — added by Deltares for Windows/Linux support
 ! NOAA-OWP iso_c_bmif_2_0.f90 was designed for Linux/Mac only

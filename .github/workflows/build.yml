@@ -31,7 +31,8 @@ jobs:
             bmi_heat/bmif_2_0_iso.f90 \
             bmi_heat/iso_c_bmif_2_0.f90 \
             bmi_heat/bmi_heat.f90 \
-            bmi_heat/register_bmi.f90
+            bmi_heat/register_bmi.f90 \
+            bmi_heat/iso_c_bmif_2_0_visibility.f90
 
       - name: Harvest Intel Runtime Libraries
         shell: bash
@@ -68,14 +69,15 @@ jobs:
           docker run -v ${{ github.workspace }}:/repo almalinux8-ifx bash -c "
             source /opt/intel/oneapi/setvars.sh --force && \
             cd /repo && \
-            ifx  -shared -fPIC -fpp -Iheat -static-intel \
+            ifx  -shared -fPIC -fpp -Iheat -static-intel -fvisibility=hidden \
             -o libbmi_heat.so \
             heat/heat.f90 \
             bmi_heat/bmi.f90 \
             bmi_heat/bmif_2_0_iso.f90 \
             bmi_heat/iso_c_bmif_2_0.f90 \
             bmi_heat/bmi_heat.f90 \
-            bmi_heat/register_bmi.f90
+            bmi_heat/register_bmi.f90 \
+            bmi_heat/iso_c_bmif_2_0_visibility.f90
           "
 
       - name: Upload Linux Library

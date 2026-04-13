@@ -31,9 +31,8 @@ jobs:
             bmi_heat/bmif_2_0_iso.f90 \
             bmi_heat/iso_c_bmif_2_0.f90 \
             bmi_heat/bmi_heat.f90 \
-            bmi_heat/register_bmi.f90 \
-            bmi_heat/iso_c_bmif_2_0_visibility.f90
-
+            bmi_heat/register_bmi.f90 
+            
       - name: Harvest Intel Runtime Libraries
         shell: bash
         run: |
@@ -76,8 +75,7 @@ jobs:
             bmi_heat/bmif_2_0_iso.f90 \
             bmi_heat/iso_c_bmif_2_0.f90 \
             bmi_heat/bmi_heat.f90 \
-            bmi_heat/register_bmi.f90 \
-            bmi_heat/iso_c_bmif_2_0_visibility.f90
+            bmi_heat/register_bmi.f90 
           "
 
       - name: Upload Linux Library

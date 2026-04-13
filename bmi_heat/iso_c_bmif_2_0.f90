@@ -131,7 +131,6 @@ module iso_c_bmif_2_0
     !GCC$ ATTRIBUTES VISIBILITY="default" :: get_grid_face_nodes
     !GCC$ ATTRIBUTES VISIBILITY="default" :: get_grid_nodes_per_face
 #endif
-    pure function c_to_f_string(...)
   
     pure function c_to_f_string(c_string) result(f_string)
       implicit none

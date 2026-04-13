@@ -8,6 +8,11 @@
 ! All BMI proxy functions are provided generically by iso_c_bmif_2_0.f90.
 
 function register_bmi(this) result(bmi_status) bind(C, name="register_bmi")
+#ifdef _WIN32
+  !DEC$ ATTRIBUTES DLLEXPORT :: register_bmi
+#else
+  !GCC$ ATTRIBUTES VISIBILITY="default" :: register_bmi
+#endif
   use, intrinsic :: iso_c_binding, only: c_ptr, c_loc, c_int
   use iso_c_bmif_2_0
   use bmiheatf

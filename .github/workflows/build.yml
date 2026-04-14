@@ -32,7 +32,7 @@ jobs:
             bmi_heat/iso_c_bmif_2_0.f90 \
             bmi_heat/bmi_heat.f90 \
             bmi_heat/register_bmi.f90 \
-            //link //DEF:bmi_heat/libbmi_heat.def
+            //link /DEF:bmi_heat/libbmi_heat.def
     
       - name: Harvest Intel Runtime Libraries
         shell: bash

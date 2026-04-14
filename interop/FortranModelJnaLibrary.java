@@ -10,8 +10,8 @@
  *
  * Type mapping summary (C → JNA)
  * --------------------------------
- *  void*             → Pointer
- *  void**            → PointerByReference
+ *  void** handle     → PointerByReference  (DIFF 8: every handle is void** — see NOTE G)
+ *  void**            → PointerByReference  (non-handle uses, e.g. get_value_ptr_*)
  *  int*   (scalar out)  → IntByReference
  *  double* (scalar out) → DoubleByReference
  *  const double* (scalar in, by-ref) → DoubleByReference  (see NOTE A)
@@ -41,7 +41,7 @@
  *         bufs[i] = new Memory(BMI_MAX_VAR_NAME);
  *         ptrs[i] = bufs[i];
  *     }
- *     lib.get_input_var_names(handle, ptrs);
+ *     lib.get_input_var_names(handleRef, ptrs);
  *     for (int i = 0; i < count; i++) {
  *         String varName = bufs[i].getString(0);
  *     }
@@ -69,17 +69,23 @@
  *   sized, space-padded byte[] before calling any method that takes byte[] name
  *   or byte[] configFile.
  *
+ * NOTE G — handle is PointerByReference (DIFF 8 in bmi.h)
+ *   iso_c_bmif_2_0.f90 declares the handle as `type(c_ptr), intent(in)` without
+ *   the VALUE attribute, so Fortran bind(C) passes it by reference → void** in C.
+ *   Every method except register_bmi therefore takes PointerByReference as the
+ *   first argument.  Do NOT unwrap with .getValue() before passing to methods.
+ *
  * Typical usage lifecycle:
  *
  *   FortranModelJnaLibrary lib = Native.load("bmi_heat", FortranModelJnaLibrary.class);
  *   PointerByReference handleRef = new PointerByReference();
  *   lib.register_bmi(handleRef);
- *   Pointer handle = handleRef.getValue();
- *   llib.initialize(handle, new FortranString("/path/to/config.cfg").toBytes());
- *   lib.update(handle);
+ *   // NOTE G: do NOT unwrap handleRef — all methods take PointerByReference directly
+ *   lib.initialize(handleRef, new FortranString("/path/to/config.cfg").toBytes());
+ *   lib.update(handleRef);
  *   float[] dest = new float[gridSize];
- *   lib.get_value_float(handle, new FortranString("plate_surface__temperature").toBytes(), dest);
- *   lib.finalize(handle);   // also deallocates; do not use handle after this
+ *   lib.get_value_float(handleRef, new FortranString("plate_surface__temperature").toBytes(), dest);
+ *   lib.finalize(handleRef);   // also deallocates; do not use handleRef after this
  */
 package bmi.model;
 
@@ -129,10 +135,10 @@ public interface FortranModelJnaLibrary extends Library {
      * @param configFile  path to the configuration file, padded to exactly
      *                    BMI_MAX_FILE_NAME bytes (use FortranString.toBytes())
      */
-    int initialize(Pointer handle, byte[] configFile);
+    int initialize(PointerByReference handle, byte[] configFile);
 
     /** Advance the model by one internal time step. */
-    int update(Pointer handle);
+    int update(PointerByReference handle);
 
     /**
      * Advance the model until the given model time.
@@ -141,13 +147,13 @@ public interface FortranModelJnaLibrary extends Library {
      *
      * @param time  reference to the target time value
      */
-    int update_until(Pointer handle, DoubleByReference time);
+    int update_until(PointerByReference handle, DoubleByReference time);
 
     /**
      * Finalize the model AND deallocate the model instance.
      * Do NOT use handle after calling finalize().
      */
-    int finalize(Pointer handle);
+    int finalize(PointerByReference handle);
 
     // ----------------------------------------------------------------
     // Model information
@@ -158,13 +164,13 @@ public interface FortranModelJnaLibrary extends Library {
      *
      * @param name  pre-allocated byte array, exactly BMI_MAX_COMPONENT_NAME bytes
      */
-    int get_component_name(Pointer handle, byte[] name);
+    int get_component_name(PointerByReference handle, byte[] name);
 
     /** Count a model's input variables. */
-    int get_input_item_count(Pointer handle, IntByReference count);
+    int get_input_item_count(PointerByReference handle, IntByReference count);
 
     /** Count a model's output variables. */
-    int get_output_item_count(Pointer handle, IntByReference count);
+    int get_output_item_count(PointerByReference handle, IntByReference count);
 
     /**
      * List a model's input variable names.
@@ -174,13 +180,13 @@ public interface FortranModelJnaLibrary extends Library {
      *
      * @param names  array of count pre-allocated char buffers (Pointer[])
      */
-    int get_input_var_names(Pointer handle, Pointer[] names);
+    int get_input_var_names(PointerByReference handle, Pointer[] names);
 
     /**
      * List a model's output variable names.
      * NOTE B applies; see get_input_var_names.
      */
-    int get_output_var_names(Pointer handle, Pointer[] names);
+    int get_output_var_names(PointerByReference handle, Pointer[] names);
 
     // ----------------------------------------------------------------
     // Variable information
@@ -190,54 +196,54 @@ public interface FortranModelJnaLibrary extends Library {
      * Get the grid identifier for the given variable.
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_var_grid(Pointer handle, byte[] name, IntByReference grid);
+    int get_var_grid(PointerByReference handle, byte[] name, IntByReference grid);
 
     /**
      * Get the data type of the variable as a null-terminated string.
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param type  pre-allocated byte array, at least BMI_MAX_TYPE_NAME bytes
      */
-    int get_var_type(Pointer handle, byte[] name, byte[] type);
+    int get_var_type(PointerByReference handle, byte[] name, byte[] type);
 
     /**
      * Get the units of the variable.
      * @param name   variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param units  pre-allocated byte array, at least BMI_MAX_UNITS_NAME bytes
      */
-    int get_var_units(Pointer handle, byte[] name, byte[] units);
+    int get_var_units(PointerByReference handle, byte[] name, byte[] units);
 
     /**
      * Get memory use per array element, in bytes.
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_var_itemsize(Pointer handle, byte[] name, IntByReference size);
+    int get_var_itemsize(PointerByReference handle, byte[] name, IntByReference size);
 
     /**
      * Get total size of the variable in bytes (all elements).
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_var_nbytes(Pointer handle, byte[] name, IntByReference nbytes);
+    int get_var_nbytes(PointerByReference handle, byte[] name, IntByReference nbytes);
 
     /**
      * Get the location of the variable: "node", "edge", or "face".
      * @param name      variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param location  pre-allocated byte array, at least BMI_MAX_VAR_NAME bytes
      */
-    int get_var_location(Pointer handle, byte[] name, byte[] location);
+    int get_var_location(PointerByReference handle, byte[] name, byte[] location);
 
     // ----------------------------------------------------------------
     // Time information
     // ----------------------------------------------------------------
 
-    int get_current_time(Pointer handle, DoubleByReference time);
-    int get_start_time  (Pointer handle, DoubleByReference time);
-    int get_end_time    (Pointer handle, DoubleByReference time);
+    int get_current_time(PointerByReference handle, DoubleByReference time);
+    int get_start_time  (PointerByReference handle, DoubleByReference time);
+    int get_end_time    (PointerByReference handle, DoubleByReference time);
 
     /**
      * @param units  pre-allocated byte array, at least BMI_MAX_UNITS_NAME bytes
      */
-    int get_time_units(Pointer handle, byte[] units);
-    int get_time_step (Pointer handle, DoubleByReference timeStep);
+    int get_time_units(PointerByReference handle, byte[] units);
+    int get_time_step (PointerByReference handle, DoubleByReference timeStep);
 
     // ----------------------------------------------------------------
     // Getters — full array copy
@@ -249,9 +255,9 @@ public interface FortranModelJnaLibrary extends Library {
      * the element count.
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_value_int   (Pointer handle, byte[] name, int[]    dest);
-    int get_value_float (Pointer handle, byte[] name, float[]  dest);
-    int get_value_double(Pointer handle, byte[] name, double[] dest);
+    int get_value_int   (PointerByReference handle, byte[] name, int[]    dest);
+    int get_value_float (PointerByReference handle, byte[] name, float[]  dest);
+    int get_value_double(PointerByReference handle, byte[] name, double[] dest);
 
     // ----------------------------------------------------------------
     // Getters — zero-copy reference (NOTE C: STUB — always BMI_FAILURE)
@@ -263,9 +269,9 @@ public interface FortranModelJnaLibrary extends Library {
      * @param name     variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param destPtr  out: *destPtr is set to model-internal memory (or NULL)
      */
-    int get_value_ptr_int   (Pointer handle, byte[] name, PointerByReference destPtr);
-    int get_value_ptr_float (Pointer handle, byte[] name, PointerByReference destPtr);
-    int get_value_ptr_double(Pointer handle, byte[] name, PointerByReference destPtr);
+    int get_value_ptr_int   (PointerByReference handle, byte[] name, PointerByReference destPtr);
+    int get_value_ptr_float (PointerByReference handle, byte[] name, PointerByReference destPtr);
+    int get_value_ptr_double(PointerByReference handle, byte[] name, PointerByReference destPtr);
 
     // ----------------------------------------------------------------
     // Getters — indexed (NOTE D: STUB — always BMI_FAILURE)
@@ -276,9 +282,9 @@ public interface FortranModelJnaLibrary extends Library {
      * NOTE D: STUB implementation — always returns BMI_FAILURE.
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_value_at_indices_int   (Pointer handle, byte[] name, int[]    dest, int[] inds);
-    int get_value_at_indices_float (Pointer handle, byte[] name, float[]  dest, int[] inds);
-    int get_value_at_indices_double(Pointer handle, byte[] name, double[] dest, int[] inds);
+    int get_value_at_indices_int   (PointerByReference handle, byte[] name, int[]    dest, int[] inds);
+    int get_value_at_indices_float (PointerByReference handle, byte[] name, float[]  dest, int[] inds);
+    int get_value_at_indices_double(PointerByReference handle, byte[] name, double[] dest, int[] inds);
 
     // ----------------------------------------------------------------
     // Setters — full array
@@ -289,9 +295,9 @@ public interface FortranModelJnaLibrary extends Library {
      * Ensure src has the correct element count (see get_var_nbytes).
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int set_value_int   (Pointer handle, byte[] name, int[]    src);
-    int set_value_float (Pointer handle, byte[] name, float[]  src);
-    int set_value_double(Pointer handle, byte[] name, double[] src);
+    int set_value_int   (PointerByReference handle, byte[] name, int[]    src);
+    int set_value_float (PointerByReference handle, byte[] name, float[]  src);
+    int set_value_double(PointerByReference handle, byte[] name, double[] src);
 
     // ----------------------------------------------------------------
     // Setters — indexed (NOTE D: STUB — always BMI_FAILURE)
@@ -302,9 +308,9 @@ public interface FortranModelJnaLibrary extends Library {
      * NOTE D: STUB implementation — always returns BMI_FAILURE.
      * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int set_value_at_indices_int   (Pointer handle, byte[] name, int[] inds, int[]    src);
-    int set_value_at_indices_float (Pointer handle, byte[] name, int[] inds, float[]  src);
-    int set_value_at_indices_double(Pointer handle, byte[] name, int[] inds, double[] src);
+    int set_value_at_indices_int   (PointerByReference handle, byte[] name, int[] inds, int[]    src);
+    int set_value_at_indices_float (PointerByReference handle, byte[] name, int[] inds, float[]  src);
+    int set_value_at_indices_double(PointerByReference handle, byte[] name, int[] inds, double[] src);
 
     // ----------------------------------------------------------------
     // Grid information
@@ -317,16 +323,16 @@ public interface FortranModelJnaLibrary extends Library {
      */
 
     /** Get the number of dimensions of the computational grid. */
-    int get_grid_rank(Pointer handle, IntByReference grid, IntByReference rank);
+    int get_grid_rank(PointerByReference handle, IntByReference grid, IntByReference rank);
 
     /** Get the total number of elements in the computational grid. */
-    int get_grid_size(Pointer handle, IntByReference grid, IntByReference size);
+    int get_grid_size(PointerByReference handle, IntByReference grid, IntByReference size);
 
     /**
      * Get the grid type as a null-terminated string.
      * @param type  pre-allocated byte array, at least BMI_MAX_TYPE_NAME bytes
      */
-    int get_grid_type(Pointer handle, IntByReference grid, byte[] type);
+    int get_grid_type(PointerByReference handle, IntByReference grid, byte[] type);
 
     // Uniform rectilinear
 
@@ -334,19 +340,19 @@ public interface FortranModelJnaLibrary extends Library {
      * Get grid dimensions.  shape[0] = rows (n_y), shape[1] = columns (n_x).
      * @param shape  pre-allocated int array, rank elements
      */
-    int get_grid_shape  (Pointer handle, IntByReference grid, int[]    shape);
+    int get_grid_shape  (PointerByReference handle, IntByReference grid, int[]    shape);
 
     /**
      * Get spacing between grid nodes.  spacing[0] = dy, spacing[1] = dx.
      * @param spacing  pre-allocated double array, rank elements
      */
-    int get_grid_spacing(Pointer handle, IntByReference grid, double[] spacing);
+    int get_grid_spacing(PointerByReference handle, IntByReference grid, double[] spacing);
 
     /**
      * Get coordinates of the grid origin.
      * @param origin  pre-allocated double array, rank elements
      */
-    int get_grid_origin (Pointer handle, IntByReference grid, double[] origin);
+    int get_grid_origin (PointerByReference handle, IntByReference grid, double[] origin);
 
     // Non-uniform / unstructured
 
@@ -354,13 +360,13 @@ public interface FortranModelJnaLibrary extends Library {
      * Get x-coordinates of grid nodes.
      * @param x  pre-allocated double array, get_grid_node_count elements
      */
-    int get_grid_x(Pointer handle, IntByReference grid, double[] x);
-    int get_grid_y(Pointer handle, IntByReference grid, double[] y);
-    int get_grid_z(Pointer handle, IntByReference grid, double[] z);
+    int get_grid_x(PointerByReference handle, IntByReference grid, double[] x);
+    int get_grid_y(PointerByReference handle, IntByReference grid, double[] y);
+    int get_grid_z(PointerByReference handle, IntByReference grid, double[] z);
 
-    int get_grid_node_count(Pointer handle, IntByReference grid, IntByReference count);
-    int get_grid_edge_count(Pointer handle, IntByReference grid, IntByReference count);
-    int get_grid_face_count(Pointer handle, IntByReference grid, IntByReference count);
+    int get_grid_node_count(PointerByReference handle, IntByReference grid, IntByReference count);
+    int get_grid_edge_count(PointerByReference handle, IntByReference grid, IntByReference count);
+    int get_grid_face_count(PointerByReference handle, IntByReference grid, IntByReference count);
 
     /**
      * Get edge-node connectivity.
@@ -369,23 +375,23 @@ public interface FortranModelJnaLibrary extends Library {
      * NOTE E (BUG 1): see bmi.h — the Fortran implementation has a logic error
      * in the array-size calculation for this function.
      */
-    int get_grid_edge_nodes    (Pointer handle, IntByReference grid, int[] edgeNodes);
+    int get_grid_edge_nodes    (PointerByReference handle, IntByReference grid, int[] edgeNodes);
 
     /**
      * Get face-edge connectivity.
      * @param faceEdges  pre-allocated int array, sum(nodes_per_face) elements
      */
-    int get_grid_face_edges    (Pointer handle, IntByReference grid, int[] faceEdges);
+    int get_grid_face_edges    (PointerByReference handle, IntByReference grid, int[] faceEdges);
 
     /**
      * Get face-node connectivity.
      * @param faceNodes  pre-allocated int array, sum(nodes_per_face) elements
      */
-    int get_grid_face_nodes    (Pointer handle, IntByReference grid, int[] faceNodes);
+    int get_grid_face_nodes    (PointerByReference handle, IntByReference grid, int[] faceNodes);
 
     /**
      * Get the number of nodes for each face.
      * @param nodesPerFace  pre-allocated int array, get_grid_face_count elements
      */
-    int get_grid_nodes_per_face(Pointer handle, IntByReference grid, int[] nodesPerFace);
+    int get_grid_nodes_per_face(PointerByReference handle, IntByReference grid, int[] nodesPerFace);
 }

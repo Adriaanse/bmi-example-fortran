@@ -216,9 +216,15 @@ thin Fortran `box` type, and returns `c_loc(box)` as an opaque `void*`. Every
 other BMI function takes this handle, recovers the Fortran object with
 `c_f_pointer`, and dispatches polymorphically.
 
-`finalize(void* handle)` **both** runs the BMI finalize method **and**
+`finalize(void** handle)` **both** runs the BMI finalize method **and**
 deallocates the model. There is no separate `bmi_destroy()` — do not use
 the handle after calling `finalize`.
+
+**ABI note:** every function except `register_bmi` receives the handle as
+`type(c_ptr), intent(in)` **without** the Fortran `VALUE` attribute.
+Without `VALUE`, Fortran `bind(C)` passes by reference, so the C ABI is
+`void**` throughout. In JNA this maps to `PointerByReference` — do **not**
+unwrap with `.getValue()` before calling BMI methods.
 
 ### FEWS build (GitHub Actions)
 
@@ -231,10 +237,10 @@ the handle after calling `finalize`.
 
 ```java
 import bmi.model.FortranModelJnaLibrary;
+import bmi.model.FortranString;
 import com.sun.jna.Native;
-import com.sun.jna.Pointer;
-import com.sun.jna.Memory;
-import com.sun.jna.ptr.*;
+import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
 
 // Load the shared library
 FortranModelJnaLibrary lib =
@@ -243,32 +249,33 @@ FortranModelJnaLibrary lib =
 // Allocate the model
 PointerByReference handleRef = new PointerByReference();
 lib.register_bmi(handleRef);
-Pointer handle = handleRef.getValue();
+// All methods take handleRef directly — do NOT call handleRef.getValue()
 
 // Initialize
-lib.initialize(handle, "/path/to/config.cfg");
+lib.initialize(handleRef, new FortranString("/path/to/config.cfg").toBytes());
 
 // Find grid size for a variable
 IntByReference gridRef = new IntByReference();
-lib.get_var_grid(handle, "plate_surface__temperature", gridRef);
+lib.get_var_grid(handleRef, new FortranString("plate_surface__temperature").toBytes(), gridRef);
 IntByReference sizeRef = new IntByReference();
-lib.get_grid_size(handle, gridRef, sizeRef);
+lib.get_grid_size(handleRef, gridRef, sizeRef);
 
 // Run one step and retrieve results
-lib.update(handle);
+lib.update(handleRef);
 float[] dest = new float[sizeRef.getValue()];
-lib.get_value_float(handle, "plate_surface__temperature", dest);
+lib.get_value_float(handleRef, new FortranString("plate_surface__temperature").toBytes(), dest);
 
-// Finalize (also frees memory)
-lib.finalize(handle);
+// Finalize (also frees memory — do not use handleRef after this)
+lib.finalize(handleRef);
 ```
 
 ### Interop files
 
 | File | Purpose |
 |------|---------|
-| `interop/bmi.h` | C header with exact exported symbol signatures and ABI notes |
+| `interop/bmi.h` | C header with exact exported symbol signatures and ABI notes (DIFF 1–8) |
 | `interop/FortranModelJnaLibrary.java` | JNA interface (`bmi.model` package) |
+| `interop/FortranString.java` | Helper: converts Java String ↔ Fortran fixed-size 2048-byte buffer |
 | `interop/bmi_from_spec.h` | Reference header derived from the abstract Fortran spec (not the actual ABI) |
 
 See `interop/bmi.h` for important ABI differences from the abstract spec,

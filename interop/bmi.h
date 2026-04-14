@@ -23,7 +23,7 @@
  *
  * DIFF 2 — register_bmi factory / finalize cleanup
  *   register_bmi(void** handle) allocates the model and returns an opaque
- *   handle. finalize(void* handle) BOTH runs the BMI finalize AND deallocates
+ *   handle. finalize(void** handle) BOTH runs the BMI finalize AND deallocates
  *   the model (it replaces bmi_destroy). There is no separate bmi_destroy.
  *
  * DIFF 3 — Scalar intent(in) parameters passed by reference (NOT by value)
@@ -92,6 +92,14 @@
  *     set_value_int/float/double          — name (BMI_MAX_VAR_NAME)
  *     set_value_at_indices_int/float/double — name (BMI_MAX_VAR_NAME)
  *
+ * DIFF 8 — handle is void** (type(c_ptr) without VALUE → passed by reference)
+ *   In iso_c_bmif_2_0.f90 every BMI function except register_bmi declares the
+ *   opaque model handle as `type(c_ptr), intent(in)` WITHOUT the VALUE attribute.
+ *   Without VALUE the Fortran bind(C) ABI passes the argument by reference, so
+ *   the C side sees void** (pointer to the handle) rather than void*.
+ *   register_bmi is unaffected: it already takes void** to return the new handle.
+ *   This differs from bmi_from_spec.h, which used void* throughout.
+ *
  * KNOWN BUGS in iso_c_bmif_2_0.f90 (do NOT modify that file per constraints)
  * ---------------------------------------------------------------------------
  * BUG 1 — get_grid_edge_nodes: line 893 reads
@@ -155,12 +163,12 @@ int register_bmi(void** handle);
  * @param config_file  path to the configuration file in a BMI_MAX_FILE_NAME-byte
  *                     buffer, padded with spaces or NUL bytes
  */
-int initialize(void* handle, const char* config_file);
+int initialize(void** handle, const char* config_file);
 
 /**
  * Advance the model by one internal time step.
  */
-int update(void* handle);
+int update(void** handle);
 
 /**
  * Advance the model until the given model time.
@@ -168,7 +176,7 @@ int update(void* handle);
  * DIFF 3: time is passed by reference (const double*), not by value.
  * @param time  pointer to the target time value
  */
-int update_until(void* handle, const double* time);
+int update_until(void** handle, const double* time);
 
 /**
  * Perform teardown tasks for the model AND deallocate the model instance.
@@ -177,7 +185,7 @@ int update_until(void* handle, const double* time);
  * Do NOT use handle after calling finalize().  There is no separate
  * bmi_destroy() — this function replaces it.
  */
-int finalize(void* handle);
+int finalize(void** handle);
 
 /* ------------------------------------------------------------------ */
 /* Model information                                                    */
@@ -189,13 +197,13 @@ int finalize(void* handle);
  * DIFF 4: Uses a caller-allocated buffer (char*), not char**.
  * @param name  caller-allocated buffer, at least BMI_MAX_COMPONENT_NAME bytes
  */
-int get_component_name(void* handle, char* name);
+int get_component_name(void** handle, char* name);
 
 /** Count a model's input variables. */
-int get_input_item_count(void* handle, int* count);
+int get_input_item_count(void** handle, int* count);
 
 /** Count a model's output variables. */
-int get_output_item_count(void* handle, int* count);
+int get_output_item_count(void** handle, int* count);
 
 /**
  * List a model's input variables.
@@ -207,13 +215,13 @@ int get_output_item_count(void* handle, int* count);
  *
  * @param names  array of count pre-allocated char* buffers
  */
-int get_input_var_names(void* handle, void** names);
+int get_input_var_names(void** handle, void** names);
 
 /**
  * List a model's output variables.
  * DIFF 5 applies; see get_input_var_names.
  */
-int get_output_var_names(void* handle, void** names);
+int get_output_var_names(void** handle, void** names);
 
 /* ------------------------------------------------------------------ */
 /* Variable information                                                 */
@@ -225,45 +233,45 @@ int get_output_var_names(void* handle, void** names);
  */
 
 /** Get the grid identifier for the given variable. */
-int get_var_grid(void* handle, const char* name, int* grid);
+int get_var_grid(void** handle, const char* name, int* grid);
 
 /**
  * Get the data type of the given variable as a string.
  * @param type  caller-allocated buffer, BMI_MAX_TYPE_NAME bytes
  */
-int get_var_type(void* handle, const char* name, char* type);
+int get_var_type(void** handle, const char* name, char* type);
 
 /**
  * Get the units of the given variable.
  * @param units  caller-allocated buffer, BMI_MAX_UNITS_NAME bytes
  */
-int get_var_units(void* handle, const char* name, char* units);
+int get_var_units(void** handle, const char* name, char* units);
 
 /** Get memory use per array element, in bytes. */
-int get_var_itemsize(void* handle, const char* name, int* size);
+int get_var_itemsize(void** handle, const char* name, int* size);
 
 /** Get total size of the variable in bytes (all elements combined). */
-int get_var_nbytes(void* handle, const char* name, int* nbytes);
+int get_var_nbytes(void** handle, const char* name, int* nbytes);
 
 /**
  * Get the location of the variable on the grid: "node", "edge", or "face".
  * @param location  caller-allocated buffer, BMI_MAX_VAR_NAME bytes
  */
-int get_var_location(void* handle, const char* name, char* location);
+int get_var_location(void** handle, const char* name, char* location);
 
 /* ------------------------------------------------------------------ */
 /* Time information                                                     */
 /* ------------------------------------------------------------------ */
 
-int get_current_time(void* handle, double* time);
-int get_start_time  (void* handle, double* time);
-int get_end_time    (void* handle, double* time);
+int get_current_time(void** handle, double* time);
+int get_start_time  (void** handle, double* time);
+int get_end_time    (void** handle, double* time);
 
 /**
  * @param units  caller-allocated buffer, BMI_MAX_UNITS_NAME bytes
  */
-int get_time_units(void* handle, char* units);
-int get_time_step (void* handle, double* time_step);
+int get_time_units(void** handle, char* units);
+int get_time_step (void** handle, double* time_step);
 
 /* ------------------------------------------------------------------ */
 /* Getters — full array copy                                            */
@@ -279,9 +287,9 @@ int get_time_step (void* handle, double* time_step);
  * Caller must pre-allocate dest: use get_var_nbytes / get_var_itemsize to
  * determine the element count before calling.
  */
-int get_value_int   (void* handle, const char* name, int*    dest);
-int get_value_float (void* handle, const char* name, float*  dest);
-int get_value_double(void* handle, const char* name, double* dest);
+int get_value_int   (void** handle, const char* name, int*    dest);
+int get_value_float (void** handle, const char* name, float*  dest);
+int get_value_double(void** handle, const char* name, double* dest);
 
 /* ------------------------------------------------------------------ */
 /* Getters — zero-copy reference                                        */
@@ -298,9 +306,9 @@ int get_value_double(void* handle, const char* name, double* dest);
  *
  * @param dest_ptr  out: *dest_ptr is set to model-internal storage (or NULL)
  */
-int get_value_ptr_int   (void* handle, const char* name, void** dest_ptr);
-int get_value_ptr_float (void* handle, const char* name, void** dest_ptr);
-int get_value_ptr_double(void* handle, const char* name, void** dest_ptr);
+int get_value_ptr_int   (void** handle, const char* name, void** dest_ptr);
+int get_value_ptr_float (void** handle, const char* name, void** dest_ptr);
+int get_value_ptr_double(void** handle, const char* name, void** dest_ptr);
 
 /* ------------------------------------------------------------------ */
 /* Getters — indexed                                                    */
@@ -315,11 +323,11 @@ int get_value_ptr_double(void* handle, const char* name, void** dest_ptr);
  * @param dest  caller-allocated array, n elements
  * @param inds  array of 0-based flat indices, n elements
  */
-int get_value_at_indices_int   (void* handle, const char* name,
+int get_value_at_indices_int   (void** handle, const char* name,
                                 int*    dest, const int* inds);
-int get_value_at_indices_float (void* handle, const char* name,
+int get_value_at_indices_float (void** handle, const char* name,
                                 float*  dest, const int* inds);
-int get_value_at_indices_double(void* handle, const char* name,
+int get_value_at_indices_double(void** handle, const char* name,
                                 double* dest, const int* inds);
 
 /* ------------------------------------------------------------------ */
@@ -330,9 +338,9 @@ int get_value_at_indices_double(void* handle, const char* name,
  * Set new values for the given variable.
  * Caller must ensure src has the correct element count (see get_var_nbytes).
  */
-int set_value_int   (void* handle, const char* name, const int*    src);
-int set_value_float (void* handle, const char* name, const float*  src);
-int set_value_double(void* handle, const char* name, const double* src);
+int set_value_int   (void** handle, const char* name, const int*    src);
+int set_value_float (void** handle, const char* name, const float*  src);
+int set_value_double(void** handle, const char* name, const double* src);
 
 /* ------------------------------------------------------------------ */
 /* Setters — indexed                                                    */
@@ -347,11 +355,11 @@ int set_value_double(void* handle, const char* name, const double* src);
  * @param inds  0-based flat index array
  * @param src   values to write at those indices
  */
-int set_value_at_indices_int   (void* handle, const char* name,
+int set_value_at_indices_int   (void** handle, const char* name,
                                 const int* inds, const int*    src);
-int set_value_at_indices_float (void* handle, const char* name,
+int set_value_at_indices_float (void** handle, const char* name,
                                 const int* inds, const float*  src);
-int set_value_at_indices_double(void* handle, const char* name,
+int set_value_at_indices_double(void** handle, const char* name,
                                 const int* inds, const double* src);
 
 /* ------------------------------------------------------------------ */
@@ -364,16 +372,16 @@ int set_value_at_indices_double(void* handle, const char* name,
  */
 
 /** Get the number of dimensions of the computational grid. */
-int get_grid_rank(void* handle, const int* grid, int* rank);
+int get_grid_rank(void** handle, const int* grid, int* rank);
 
 /** Get the total number of elements in the computational grid. */
-int get_grid_size(void* handle, const int* grid, int* size);
+int get_grid_size(void** handle, const int* grid, int* size);
 
 /**
  * Get the grid type as a null-terminated string (e.g. "uniform_rectilinear").
  * @param type  caller-allocated buffer, BMI_MAX_TYPE_NAME bytes
  */
-int get_grid_type(void* handle, const int* grid, char* type);
+int get_grid_type(void** handle, const int* grid, char* type);
 
 /* Uniform rectilinear ------------------------------------------------ */
 
@@ -382,20 +390,20 @@ int get_grid_type(void* handle, const int* grid, char* type);
  * shape[0] = rows (n_y), shape[1] = columns (n_x).
  * @param shape  caller-allocated int array, rank elements
  */
-int get_grid_shape  (void* handle, const int* grid, int*    shape);
+int get_grid_shape  (void** handle, const int* grid, int*    shape);
 
 /**
  * Get spacing between grid nodes.
  * spacing[0] = dy, spacing[1] = dx.
  * @param spacing  caller-allocated double array, rank elements
  */
-int get_grid_spacing(void* handle, const int* grid, double* spacing);
+int get_grid_spacing(void** handle, const int* grid, double* spacing);
 
 /**
  * Get coordinates of the grid origin.
  * @param origin  caller-allocated double array, rank elements
  */
-int get_grid_origin (void* handle, const int* grid, double* origin);
+int get_grid_origin (void** handle, const int* grid, double* origin);
 
 /* Non-uniform / unstructured ---------------------------------------- */
 
@@ -403,13 +411,13 @@ int get_grid_origin (void* handle, const int* grid, double* origin);
  * Get x-coordinates of the grid nodes.
  * @param x  caller-allocated double array, get_grid_node_count elements
  */
-int get_grid_x(void* handle, const int* grid, double* x);
-int get_grid_y(void* handle, const int* grid, double* y);
-int get_grid_z(void* handle, const int* grid, double* z);
+int get_grid_x(void** handle, const int* grid, double* x);
+int get_grid_y(void** handle, const int* grid, double* y);
+int get_grid_z(void** handle, const int* grid, double* z);
 
-int get_grid_node_count(void* handle, const int* grid, int* count);
-int get_grid_edge_count(void* handle, const int* grid, int* count);
-int get_grid_face_count(void* handle, const int* grid, int* count);
+int get_grid_node_count(void** handle, const int* grid, int* count);
+int get_grid_edge_count(void** handle, const int* grid, int* count);
+int get_grid_face_count(void** handle, const int* grid, int* count);
 
 /**
  * Get edge-node connectivity.
@@ -418,25 +426,25 @@ int get_grid_face_count(void* handle, const int* grid, int* count);
  * BUG 1 WARNING: iso_c_bmif_2_0.f90 line 893 has a logic error that may cause
  * the wrong number of elements to be filled. See file header BUG 1 for details.
  */
-int get_grid_edge_nodes    (void* handle, const int* grid, int* edge_nodes);
+int get_grid_edge_nodes    (void** handle, const int* grid, int* edge_nodes);
 
 /**
  * Get face-edge connectivity.
  * @param face_edges  caller-allocated int array, sum(nodes_per_face) elements
  */
-int get_grid_face_edges    (void* handle, const int* grid, int* face_edges);
+int get_grid_face_edges    (void** handle, const int* grid, int* face_edges);
 
 /**
  * Get face-node connectivity.
  * @param face_nodes  caller-allocated int array, sum(nodes_per_face) elements
  */
-int get_grid_face_nodes    (void* handle, const int* grid, int* face_nodes);
+int get_grid_face_nodes    (void** handle, const int* grid, int* face_nodes);
 
 /**
  * Get the number of nodes per face.
  * @param nodes_per_face  caller-allocated int array, get_grid_face_count elements
  */
-int get_grid_nodes_per_face(void* handle, const int* grid, int* nodes_per_face);
+int get_grid_nodes_per_face(void** handle, const int* grid, int* nodes_per_face);
 
 #ifdef __cplusplus
 }

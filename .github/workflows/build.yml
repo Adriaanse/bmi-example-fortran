@@ -48,6 +48,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: compiled-library-windows
+          overwrite: true
           path: |
             *.dll
             intel_redist/
@@ -82,5 +83,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: compiled-library-linux
+          overwrite: true
           path: "*.so"
           if-no-files-found: error

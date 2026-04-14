@@ -16,7 +16,7 @@
  *  double* (scalar out) → DoubleByReference
  *  const double* (scalar in, by-ref) → DoubleByReference  (see NOTE A)
  *  const int*    (scalar in, by-ref) → IntByReference      (see NOTE A)
- *  const char*   (string in)         → String
+ *  const char*   (string in)         → byte[]  (EXACTLY BMI_MAX_* bytes — see NOTE F)
  *  char*  (string out buffer)        → byte[]  (pre-allocate BMI_MAX_* bytes)
  *  int*   (array in/out)             → int[]
  *  float* (array in/out)             → float[]
@@ -58,16 +58,27 @@
  *   See BUG 1 in bmi.h.  Buffer allocation for edge_nodes may need a manual
  *   workaround using get_grid_node_count.
  *
+ * NOTE F — String input parameters MUST be byte[], not String
+ *   The Fortran iso_c_bmif_2_0.f90 functions receive string inputs as
+ *   fixed-length Fortran character arrays (character(kind=c_char, len=*)),
+ *   NOT as null-terminated char* pointers.  The ABI requires the caller to
+ *   supply a buffer of EXACTLY BMI_MAX_FILE_NAME or BMI_MAX_VAR_NAME bytes.
+ *   Passing a Java String causes JNA to marshal a null-terminated char* and
+ *   the Fortran side reads past the end of the buffer → SIGSEGV.
+ *   Use new FortranString(s).toBytes() to produce a correctly
+ *   sized, space-padded byte[] before calling any method that takes byte[] name
+ *   or byte[] configFile.
+ *
  * Typical usage lifecycle:
  *
  *   FortranModelJnaLibrary lib = Native.load("bmi_heat", FortranModelJnaLibrary.class);
  *   PointerByReference handleRef = new PointerByReference();
  *   lib.register_bmi(handleRef);
  *   Pointer handle = handleRef.getValue();
- *   lib.initialize(handle, "/path/to/config.cfg");
+ *   llib.initialize(handle, new FortranString("/path/to/config.cfg").toBytes());
  *   lib.update(handle);
  *   float[] dest = new float[gridSize];
- *   lib.get_value_float(handle, "plate_surface__temperature", dest);
+ *   lib.get_value_float(handle, new FortranString("plate_surface__temperature").toBytes(), dest);
  *   lib.finalize(handle);   // also deallocates; do not use handle after this
  */
 package bmi.model;
@@ -84,7 +95,16 @@ public interface FortranModelJnaLibrary extends Library {
     int BMI_SUCCESS = 0;
     int BMI_FAILURE = 1;
 
-    /** Maximum buffer sizes for name strings */
+    /**
+     * REQUIRED buffer sizes — Fortran expects EXACTLY this many bytes.
+     * Use FortranString.toBytes() to create correctly sized buffers.
+     *
+     * <p>String INPUT parameters (byte[] name, byte[] configFile) must be
+     * padded to exactly the declared size below; the Fortran side reads a
+     * fixed-length character array, not a null-terminated string.
+     * String OUTPUT parameters (byte[] dest) are also sized to these limits.
+     */
+    int BMI_MAX_FILE_NAME      = 2048;
     int BMI_MAX_COMPONENT_NAME = 2048;
     int BMI_MAX_VAR_NAME       = 2048;
     int BMI_MAX_TYPE_NAME      = 2048;
@@ -106,9 +126,10 @@ public interface FortranModelJnaLibrary extends Library {
      * Perform startup tasks.
      *
      * @param handle      opaque model handle from register_bmi()
-     * @param configFile  null-terminated path to the configuration file
+     * @param configFile  path to the configuration file, padded to exactly
+     *                    BMI_MAX_FILE_NAME bytes (use FortranString.toBytes())
      */
-    int initialize(Pointer handle, String configFile);
+    int initialize(Pointer handle, byte[] configFile);
 
     /** Advance the model by one internal time step. */
     int update(Pointer handle);
@@ -135,7 +156,7 @@ public interface FortranModelJnaLibrary extends Library {
     /**
      * Get the model component name into a caller-allocated buffer.
      *
-     * @param name  pre-allocated byte array, at least BMI_MAX_COMPONENT_NAME bytes
+     * @param name  pre-allocated byte array, exactly BMI_MAX_COMPONENT_NAME bytes
      */
     int get_component_name(Pointer handle, byte[] name);
 
@@ -165,32 +186,44 @@ public interface FortranModelJnaLibrary extends Library {
     // Variable information
     // ----------------------------------------------------------------
 
-    /** Get the grid identifier for the given variable. */
-    int get_var_grid(Pointer handle, String name, IntByReference grid);
+    /**
+     * Get the grid identifier for the given variable.
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
+     */
+    int get_var_grid(Pointer handle, byte[] name, IntByReference grid);
 
     /**
      * Get the data type of the variable as a null-terminated string.
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param type  pre-allocated byte array, at least BMI_MAX_TYPE_NAME bytes
      */
-    int get_var_type(Pointer handle, String name, byte[] type);
+    int get_var_type(Pointer handle, byte[] name, byte[] type);
 
     /**
      * Get the units of the variable.
+     * @param name   variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param units  pre-allocated byte array, at least BMI_MAX_UNITS_NAME bytes
      */
-    int get_var_units(Pointer handle, String name, byte[] units);
+    int get_var_units(Pointer handle, byte[] name, byte[] units);
 
-    /** Get memory use per array element, in bytes. */
-    int get_var_itemsize(Pointer handle, String name, IntByReference size);
+    /**
+     * Get memory use per array element, in bytes.
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
+     */
+    int get_var_itemsize(Pointer handle, byte[] name, IntByReference size);
 
-    /** Get total size of the variable in bytes (all elements). */
-    int get_var_nbytes(Pointer handle, String name, IntByReference nbytes);
+    /**
+     * Get total size of the variable in bytes (all elements).
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
+     */
+    int get_var_nbytes(Pointer handle, byte[] name, IntByReference nbytes);
 
     /**
      * Get the location of the variable: "node", "edge", or "face".
+     * @param name      variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param location  pre-allocated byte array, at least BMI_MAX_VAR_NAME bytes
      */
-    int get_var_location(Pointer handle, String name, byte[] location);
+    int get_var_location(Pointer handle, byte[] name, byte[] location);
 
     // ----------------------------------------------------------------
     // Time information
@@ -214,10 +247,11 @@ public interface FortranModelJnaLibrary extends Library {
      * Get a flattened copy of the given integer variable.
      * Pre-allocate dest: use get_var_nbytes / get_var_itemsize to determine
      * the element count.
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_value_int   (Pointer handle, String name, int[]    dest);
-    int get_value_float (Pointer handle, String name, float[]  dest);
-    int get_value_double(Pointer handle, String name, double[] dest);
+    int get_value_int   (Pointer handle, byte[] name, int[]    dest);
+    int get_value_float (Pointer handle, byte[] name, float[]  dest);
+    int get_value_double(Pointer handle, byte[] name, double[] dest);
 
     // ----------------------------------------------------------------
     // Getters — zero-copy reference (NOTE C: STUB — always BMI_FAILURE)
@@ -226,11 +260,12 @@ public interface FortranModelJnaLibrary extends Library {
     /**
      * Get a direct pointer into the model's internal storage.
      * NOTE C: Currently stub implementations — always return BMI_FAILURE.
+     * @param name     variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      * @param destPtr  out: *destPtr is set to model-internal memory (or NULL)
      */
-    int get_value_ptr_int   (Pointer handle, String name, PointerByReference destPtr);
-    int get_value_ptr_float (Pointer handle, String name, PointerByReference destPtr);
-    int get_value_ptr_double(Pointer handle, String name, PointerByReference destPtr);
+    int get_value_ptr_int   (Pointer handle, byte[] name, PointerByReference destPtr);
+    int get_value_ptr_float (Pointer handle, byte[] name, PointerByReference destPtr);
+    int get_value_ptr_double(Pointer handle, byte[] name, PointerByReference destPtr);
 
     // ----------------------------------------------------------------
     // Getters — indexed (NOTE D: STUB — always BMI_FAILURE)
@@ -239,10 +274,11 @@ public interface FortranModelJnaLibrary extends Library {
     /**
      * Get values at the given 0-based flat indices.
      * NOTE D: STUB implementation — always returns BMI_FAILURE.
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int get_value_at_indices_int   (Pointer handle, String name, int[]    dest, int[] inds);
-    int get_value_at_indices_float (Pointer handle, String name, float[]  dest, int[] inds);
-    int get_value_at_indices_double(Pointer handle, String name, double[] dest, int[] inds);
+    int get_value_at_indices_int   (Pointer handle, byte[] name, int[]    dest, int[] inds);
+    int get_value_at_indices_float (Pointer handle, byte[] name, float[]  dest, int[] inds);
+    int get_value_at_indices_double(Pointer handle, byte[] name, double[] dest, int[] inds);
 
     // ----------------------------------------------------------------
     // Setters — full array
@@ -251,10 +287,11 @@ public interface FortranModelJnaLibrary extends Library {
     /**
      * Set new values for the given variable.
      * Ensure src has the correct element count (see get_var_nbytes).
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int set_value_int   (Pointer handle, String name, int[]    src);
-    int set_value_float (Pointer handle, String name, float[]  src);
-    int set_value_double(Pointer handle, String name, double[] src);
+    int set_value_int   (Pointer handle, byte[] name, int[]    src);
+    int set_value_float (Pointer handle, byte[] name, float[]  src);
+    int set_value_double(Pointer handle, byte[] name, double[] src);
 
     // ----------------------------------------------------------------
     // Setters — indexed (NOTE D: STUB — always BMI_FAILURE)
@@ -263,10 +300,11 @@ public interface FortranModelJnaLibrary extends Library {
     /**
      * Set values at the given 0-based flat indices.
      * NOTE D: STUB implementation — always returns BMI_FAILURE.
+     * @param name  variable name, padded to exactly BMI_MAX_VAR_NAME bytes
      */
-    int set_value_at_indices_int   (Pointer handle, String name, int[] inds, int[]    src);
-    int set_value_at_indices_float (Pointer handle, String name, int[] inds, float[]  src);
-    int set_value_at_indices_double(Pointer handle, String name, int[] inds, double[] src);
+    int set_value_at_indices_int   (Pointer handle, byte[] name, int[] inds, int[]    src);
+    int set_value_at_indices_float (Pointer handle, byte[] name, int[] inds, float[]  src);
+    int set_value_at_indices_double(Pointer handle, byte[] name, int[] inds, double[] src);
 
     // ----------------------------------------------------------------
     // Grid information

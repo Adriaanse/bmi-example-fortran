@@ -65,6 +65,33 @@
  *   NOTE: these three functions are currently STUB IMPLEMENTATIONS that set
  *   *dest_ptr = NULL and return BMI_FAILURE.
  *
+ * DIFF 7 — String INPUT parameters require fixed-size buffers, not char*
+ *   The Fortran iso_c_bmif_2_0.f90 functions declare string input parameters
+ *   as  character(kind=c_char), dimension(*)  — a fixed-length Fortran character
+ *   array, NOT a null-terminated C string.  The Fortran side reads exactly
+ *   BMI_MAX_FILE_NAME or BMI_MAX_VAR_NAME bytes from the caller's buffer,
+ *   regardless of a null terminator.
+ *
+ *   In C, callers MUST:
+ *     1. Allocate a buffer of exactly the declared size (e.g. BMI_MAX_VAR_NAME).
+ *     2. Copy the string content into the buffer.
+ *     3. Pad the remainder with NULL bytes (zero-fill).
+ *   Note: Fortran convention uses space-padding but iso_c_bmif_2_0.f90
+ *   reads until c_null_char, so NULL padding is correct here. *   
+ *   Passing a short null-terminated string directly (e.g. a string literal)
+ *   causes the Fortran side to read past the end of the allocation → undefined
+ *   behaviour / SIGSEGV.
+ *
+ *   Affected parameters (shown as `const char*` for ABI compatibility but
+ *   requiring a full BMI_MAX_* sized buffer):
+ *     initialize          — config_file  (BMI_MAX_FILE_NAME bytes)
+ *     get_var_grid/type/units/itemsize/nbytes/location  — name (BMI_MAX_VAR_NAME)
+ *     get_value_int/float/double          — name (BMI_MAX_VAR_NAME)
+ *     get_value_ptr_int/float/double      — name (BMI_MAX_VAR_NAME)
+ *     get_value_at_indices_int/float/double — name (BMI_MAX_VAR_NAME)
+ *     set_value_int/float/double          — name (BMI_MAX_VAR_NAME)
+ *     set_value_at_indices_int/float/double — name (BMI_MAX_VAR_NAME)
+ *
  * KNOWN BUGS in iso_c_bmif_2_0.f90 (do NOT modify that file per constraints)
  * ---------------------------------------------------------------------------
  * BUG 1 — get_grid_edge_nodes: line 893 reads
@@ -94,10 +121,13 @@ extern "C" {
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
 /* ------------------------------------------------------------------ */
+/* DIFF 7: string INPUT buffers must be EXACTLY the size declared here.        */
+/* Do not pass short null-terminated strings — Fortran reads the full width.   */
 #define BMI_SUCCESS             0
 #define BMI_FAILURE             1
+#define BMI_MAX_FILE_NAME       2048   /* initialize config_file input buffer  */
 #define BMI_MAX_COMPONENT_NAME  2048
-#define BMI_MAX_VAR_NAME        2048
+#define BMI_MAX_VAR_NAME        2048   /* all name input buffers               */
 #define BMI_MAX_TYPE_NAME       2048
 #define BMI_MAX_UNITS_NAME      2048
 
@@ -117,8 +147,13 @@ int register_bmi(void** handle);
 /**
  * Perform startup tasks for the model.
  *
+ * DIFF 7: config_file must be a buffer of EXACTLY BMI_MAX_FILE_NAME bytes.
+ * The Fortran side reads a fixed-length character array — passing a short
+ * null-terminated string literal causes a buffer overread (SIGSEGV).
+ *
  * @param handle       opaque model handle from register_bmi()
- * @param config_file  null-terminated path to the configuration file
+ * @param config_file  path to the configuration file in a BMI_MAX_FILE_NAME-byte
+ *                     buffer, padded with spaces or NUL bytes
  */
 int initialize(void* handle, const char* config_file);
 
@@ -184,6 +219,11 @@ int get_output_var_names(void* handle, void** names);
 /* Variable information                                                 */
 /* ------------------------------------------------------------------ */
 
+/*
+ * DIFF 7 applies to all variable-information functions: name must be a buffer
+ * of EXACTLY BMI_MAX_VAR_NAME bytes (see file header DIFF 7).
+ */
+
 /** Get the grid identifier for the given variable. */
 int get_var_grid(void* handle, const char* name, int* grid);
 
@@ -228,6 +268,11 @@ int get_time_step (void* handle, double* time_step);
 /* ------------------------------------------------------------------ */
 /* Getters — full array copy                                            */
 /* ------------------------------------------------------------------ */
+
+/*
+ * DIFF 7 applies to all getter/setter functions: name must be a buffer of
+ * EXACTLY BMI_MAX_VAR_NAME bytes (see file header DIFF 7).
+ */
 
 /**
  * Get a flattened copy of the given integer variable.

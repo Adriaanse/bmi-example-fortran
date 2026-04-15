@@ -7,6 +7,24 @@ An example of implementing the
 [Fortran bindings](https://github.com/csdms/bmi-fortran)
 for the CSDMS [Basic Model Interface](https://bmi.csdms.io) (BMI).
 
+# Deltares 'fork' building dynamic libraries (dll / so)
+
+This is a forked / detached version of the bmi-fortran-example adapter at:
+
+https://github.com/csdms/bmi-example-fortran
+
+The sole purpose of this repos was to build dynamic libraries for both Windows and (RHEL8) Linux, and to create a JNA interop for Java with some help of Claude Code.
+
+## Note
+
+Files not relevant to the Deltares BMI application have been removed, and the github 
+fork was detached as this will not serve to create a pull requet upstream.
+
+The `bmi_main.f90` and `test/` folder are preserved from the upstream 
+CSDMS bmi-example-fortran repository as Fortran usage examples.
+They require CMake/fpm to build and are not part of the Java interop 
+build pipeline.
+
 ## Overview
 
 This is an example of implementing a BMI
@@ -33,159 +51,13 @@ This repository is organized with the following directories:
 
 ## Build/Install
 
-This example can be built on Linux, macOS, and Windows.
-
-**Prerequisites:**
-* A Fortran compiler
-* CMake or [Fortran Package Manager](https://fpm.fortran-lang.org/)
-* If using CMake, the Fortran BMI bindings. Follow the build and
-  install directions given in the
-  [README](https://github.com/csdms/bmi-fortran/blob/master/README.md)
-  in that repository.  You can choose to build them from source or
-  install them through a conda binary. If using fpm, the binding
-  will be automatically downloaded and built for you.
-* pkg-config
-
-### CMake - Linux and macOS
-
-To configure and build this example from source with CMake,
-using the current Fortran BMI version, run
-
-    cmake -B _build -DCMAKE_INSTALL_PREFIX=<path-to-installation>
-    cmake --build _build
-
-where `<path-to-installation>` is the base directory
-in which the Fortran BMI bindings have been installed
-(`/usr/local` is the default).
-When installing into a conda environment,
-use the `$CONDA_PREFIX` environment variable.
-
-Then, to install:
-
-    cmake --install _build
-
-The installation will look like
-(on macOS, using v2.0 of the Fortran BMI specification):
-
-```bash
-.
-|-- bin
-|   |-- run_bmiheatf
-|   `-- run_heatf
-|-- include
-|   |-- bmif_2_0.mod
-|   |-- bmiheatf.mod
-|   `-- heatf.mod
-`-- lib
-    |-- libbmif.a
-    |-- libbmif.2.1.4.dylib
-    |-- libbmif.dylib -> libbmif.2.1.4.dylib
-    |-- libbmiheatf.dylib
-    |-- libheatf.dylib
-    `-- pkgconfig
-        |-- bmif.pc
-        |-- bmiheatf.pc
-        `-- heatf.pc
-```
-
-Run unit tests and examples of using the sample implementation with
-
-    ctest --test-dir _build
-
-### CMake - Windows
-
-An additional prerequisite is needed for Windows:
-
-* Microsoft Visual Studio 2017 or Microsoft Build Tools for Visual Studio 2017
-
-To configure and build this example from source with CMake
-using the current Fortran BMI version,
-run the following in a [Developer Command Prompt](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs)
-
-    cmake -B _build -L -G Ninja -DCMAKE_INSTALL_PREFIX=<path-to-installation>
-	cmake --build _build
-
-where `<path-to-installation>` is the base directory
-in which the Fortran BMI bindings have been installed.
-The default is `"C:\Program Files (x86)"`.
-Note that quotes and an absolute path are needed.
-When using a conda environment, use `"%CONDA_PREFIX%\Library"`.
-
-Then, to install:
-
-	cmake --install _build
-
-Run unit tests and examples of using the sample implementation with
-
-    ctest --test-dir _build
-
-
-### Fortran Package Manager (fpm)
-
-If you don't already have fpm installed, you can do so via Conda:
-
-    conda install fpm -c conda-forge
-
-Then, to build and install:
-
-    fpm build --profile release
-    fpm install --prefix <path-to-installation>
-
-where `<path-to-installation>` is the base directory in which to
-install the model. Installation is optional.
-
-To run the tests:
-
-    fpm test -- test/sample.cfg
-
-Here, `test/sample.cfg` is passed as a command line parameter to the
-run executables, and tells the tests where to find the test config
-file.
-
-To run all of the examples:
-
-    fpm run --example --all -- example
-
-Similarly, `example` tells the example executables to look in the
-`example` directory for config files. To run individual tests:
-
-    fpm run --example <example-name> -- example
-
-Where `<example-name>` is the name of the example to run. To see
-a list of available examples, run `fpm run --example`. Note that the
-non-BMI heat model executable is not built by default when using fpm.
-If you want to build and install this too, you can do so from the
-heat directory:
-
-    cd heat
-    fpm build --profile release
-    fpm install --prefix <path-to-installation>
-
-
-## Use
-
-Run the heat model through its BMI with the `run_bmiheatf` program,
-which takes a model configuration file
-(see the [example](./example) directory for a sample)
-as a required parameter.
-If `run_bmiheatf` is in your path, run it with
-
-    run_bmiheatf test1.cfg
-
-Output from the model is written to the file **bmiheatf.out**
-in the current directory.
-
-If you built the model using fpm, you can alternatively run the
-program using
-
-    fpm run -- test.cfg
-
----
+This repos contains a github workflow, build.yml to use the Github actions
+platform for building the binaries.
 
 ## Deltares FEWS / Java interop
 
 This fork adds a C/Java interoperability layer on top of the standard BMI
-implementation, following the [NOAA-OWP NextGen `iso_c_fortran_bmi`](https://github.com/NOAA-OWP/ngen/tree/development/extern/iso_c_fortran_bmi)
+FORTRAN implementation, following the [NOAA-OWP NextGen `iso_c_fortran_bmi`](https://github.com/NOAA-OWP/ngen/tree/development/extern/iso_c_fortran_bmi)
 pattern. This allows the model to be called from Java via
 [JNA (Java Native Access)](https://github.com/java-native-access/jna)
 inside [Deltares FEWS](https://www.deltares.nl/en/software-and-data/products/delft-fews).
@@ -193,7 +65,7 @@ inside [Deltares FEWS](https://www.deltares.nl/en/software-and-data/products/del
 ### Architecture
 
 ```
-Java (FEWS)
+Java (FEWS BMI adapter)
     │  JNA – interop/FortranModelJnaLibrary.java
     ▼
 libbmi_heat.so / .dll
